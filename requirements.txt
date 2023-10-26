@@ -1,0 +1,6 @@
+mdformat
+requests
+streamlit
+bs4
+markdownify
+html
