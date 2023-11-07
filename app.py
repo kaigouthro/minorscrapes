@@ -530,7 +530,6 @@ def main():
             data = {"tag": tag, "attrs": property_dict}
             tag_requests.append(data)  # Append the dictionary to the list
 
-    tag_requests
     if COLUMNS[2].button("Crawl It", use_container_width=True, type="primary"):
         crawl_website(url, tag_requests, do_save, up_level)
         NOTIFICATION.info("Crawling complete!")
