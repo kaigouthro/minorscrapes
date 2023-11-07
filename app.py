@@ -1,113 +1,148 @@
-
 import os
+import platform
 import re
+import subprocess
 import time
-import urllib.request
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 
+import bs4
 import mdformat
 import requests
 import streamlit as st
 from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
-from statwords import StatusWords
+from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver.common.by import By
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
 
-def convert_to_markdown(input_text, **options):
+from statwords import Item, Items
+
+
+st.set_page_config("Minor Scrapes", "🔪", "wide")
+STATE = st.session_state
+
+st.title("Minor Scrapes")
+
+NOTIFICATION = st.empty()
+COLUMNS = st.columns([0.618, 0.01, 0.372])
+LEFT_TABLE = COLUMNS[0].empty()
+
+
+def get_matching_tags(soup, tags_plus_atrtibutes):
+    """
+    Get all tags that match the given parameters, but ignore tags if the parent exists
+    if an attribute exists, only get tags witth that attribute, otherwise get all of tho9se tags
+
+
+    Args:
+        soup (beautifulsoup object): BeautifulSoup Object
+        tags_attr (list): list of dictionary objects describing the tags and their attributes
+            [{ "tag": "h1", "attrs": [{"class": "some_class"}]}, {"tag": "p", "attrs": None}]
+    Yields:
+        BeautifulSoup.Tag: tags that match the given parameters
+    """
+    for tag_attr in tags_plus_atrtibutes:
+        tag = tag_attr["tag"]
+        # get all tags that match the tag
+        tags = soup.find_all(tag)
+        if tag_attr["attrs"] is not None:
+            attrs = tag_attr["attrs"]
+            for attr in attrs:
+                # get all tags with those attributes
+                tags = [t for t in tags if t.has_attr(attr) or t.has_attr(attr + "s")]
+        for t in tags:
+            if not t.find_parents(tag):
+                yield t
+
+
+def chromecheck():
+    """
+    Check if Google Chrome is installed and install it if necessary.
+    """
+    if platform.system() == "Linux":
+        print("The code is running on Linux.")
+
+        # Check if Google Chrome is already installed
+        check_command = "google-chrome-stable --version"
+        result = subprocess.run(
+            check_command, shell=True, capture_output=True, text=True
+        )
+
+        # Google Chrome is not installed?
+        if result.returncode != 0:
+
+            # Proceed with downloading and installing
+            # Assuming you are not on an ARM/Mac...
+            # ... Change as needed
+            download_url = "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+            download_command = f"wget {download_url}"
+            subprocess.run(download_command, shell=True, check=True)
+
+            # Install the downloaded package using dpkg
+            install_command = "sudo dpkg -i google-chrome-stable_current_amd64.deb"
+            subprocess.run(install_command, shell=True, check=True)
+
+            # Clean up the downloaded package
+            cleanup_command = "sudo rm google-chrome-stable_current*"
+            subprocess.run(cleanup_command, shell=True)
+        else:
+            # Google Chrome is already installed
+            print("Chrome is already installed.")
+    else:
+        print("The code is not running on Linux.\n\nPlease install Chrome")
+
+
+if "CHECKED" not in st.session_state:
+    st.session_state["CHECKED"] = chromecheck()
+
+
+class RenderedPage:
+    def __init__(self):
+        # Set up the headless browser
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")  # Run the browser in headless mode
+        self.driver = webdriver.Chrome(options=chrome_options)
+
+    def get_rendered_page(self, url):
+        # Load the webpage in the headless browser
+        self.driver.get(url)
+
+        # Wait for JavaScript to execute and render the page
+        # You can use explicit waits to wait for specific elements to appear on the page
+        time.sleep(3)
+        
+        # Get the fully rendered HTML
+        full_html = self.driver.page_source
+        # Close the browser
+        self.driver.quit()
+        # Create a Beautiful Soup object of the fully rendered page
+        soup = BeautifulSoup(full_html, "html.parser")
+        return soup
+
+
+def convert_to_markdown(soup):
     """
     Converts the input text to Markdown format.
 
     Args:
-        input_text (str): The input text to be converted.
+        input_text (soup): The input text to be converted.
         **options (kwargs): Additional options for the Markdown conversion.
 
     Returns:
         str: The converted Markdown text.
     """
-    if lang := re.search(r"language-(\w+)", input_text):
-        options["code_language"] = lang[1]
-    return MarkdownConverter(**options).convert(input_text)
 
-
-class HyperlinkParser(HTMLParser):
-    """
-    A class that parses HTML and extracts hyperlinks.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.hyperlinks = []
-
-    def handle_starttag(self, tag, attrs):
-        """
-        Handles the start tag of an HTML element and extracts hyperlinks.
-
-        Args:
-            tag (str): The name of the HTML tag.
-            attrs (list): A list of attribute-value pairs for the HTML tag.
-        """
-        if tag == "a":
-            for attr in attrs:
-                if attr[0] == "href":
-                    self.hyperlinks.append(attr[1])
-
-
-def get_hyperlinks(url):
-    """
-    Retrieves all hyperlinks from a given URL.
-
-    Args:
-        url (str): The URL to retrieve hyperlinks from.
-
-    Returns:
-        list: A list of hyperlinks found in the URL.
-    """
-    try:
-        with urllib.request.urlopen(url) as response:
-            if not response.info().get("Content-Type").startswith("text/html"):
-                return []
-            parser = HyperlinkParser()
-            while True:
-                if chunk := response.read(1024):
-                    parser.feed(chunk.decode("utf-8"))
-                else:
-                    break
-    except Exception as e:
-        st.warning(e)
-        return []
-    return parser.hyperlinks
-
-
-def get_domain_hyperlinks(local_domain, url):
-    """
-    Retrieves domain-specific hyperlinks from a given URL.
-
-    Args:
-        local_domain (str): The local domain to filter hyperlinks.
-        url (str): The URL to retrieve hyperlinks from.
-
-    Returns:
-        list: A list of domain-specific hyperlinks found in the URL.
-    """
-    clean_links = []
-    for link in set(get_hyperlinks(url)):
-        clean_link = None
-        if re.search(r"^http[s]*://" + local_domain.replace(".", r"\.") + r"/.+", link):
-            url_obj = urlparse(link)
-            if url_obj.netloc == local_domain:
-                clean_link = link
-        else:
-            clean_link = urljoin(url, link)
-        if clean_link is not None:
-            if clean_link.endswith("/"):
-                clean_link = clean_link[:-1]
-            clean_links.append(clean_link)
-    return [
-        link
-        for link in clean_links
-        if link and link.startswith(f"https://{local_domain}")
-    ]
+    converter = MarkdownConverter(
+        code_language="python",
+        default_title=False,
+        escape_asterisks=False,
+        escape_underscores=False,
+    )
+    return converter.convert_soup(soup)
 
 
 def convert_to_safe_url(text):
@@ -121,11 +156,15 @@ def convert_to_safe_url(text):
         str: The converted safe URL.
     """
     subst = "_"
-    regex = r"[^a-zA-Z0-9-_\/]|\:"
+    regex = r"[^a-zA-Z0-9-_]|\:"
     return re.sub(regex, subst, text, 0, re.DOTALL)
 
 
-def crawl_website(url, tags_to_save=[], do_save=False):
+def add_https(url):
+    return url if url.startswith(r"http") else f"https://{url}"
+
+
+def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     """
     Crawls a website and saves or displays the content.
 
@@ -134,8 +173,13 @@ def crawl_website(url, tags_to_save=[], do_save=False):
         tags_to_save (list): A list of HTML tags to save.
         do_save (bool): Whether to save the content to a folder.
     """
+    url = add_https(url)
     local_domain = urlparse(url).netloc
     local_path = urlparse(url).path
+    parts = len(local_path.split("/")[1:])
+    home_url = str(os.path.split(url)[0])
+    if parts >= 2 and up_level:
+        home_url = os.path.split(home_url)[0]
     queue = deque([url])
     seen = []
     converted = []
@@ -143,27 +187,102 @@ def crawl_website(url, tags_to_save=[], do_save=False):
     if not os.path.exists("processed"):
         os.mkdir("processed")
 
-    columns = st.columns([0.6, 0.4])
-    progress = columns[0].progress(text="Crawling", value=1.0)
-    data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
-    stattable = columns[1].empty()
     i = 0
 
+    progress = NOTIFICATION.progress(text="Crawling", value=1.0)
+    data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
+    stattable = LEFT_TABLE.empty()
+
+    browser = BrowserDrivver()
+
+    class HyperlinkParser(HTMLParser):
+        """
+        A class that parses HTML and extracts hyperlinks.
+        """
+
+        def __init__(self):
+            super().__init__()
+            self.hyperlinks = []
+
+        def handle_starttag(self, tag, attrs):
+            """
+            Handles the start tag of an HTML element and extracts hyperlinks.
+
+            Args:
+                tag (str): The name of the HTML tag.
+                attrs (list): A list of attribute-value pairs for the HTML tag.
+            """
+            if tag == "a":
+                for attr in attrs:
+                    if attr[0] == "href":
+                        self.hyperlinks.append(attr[1])
+
+    def get_hyperlinks(url):
+
+        """
+        Retrieves all hyperlinks from a given URL.
+
+        Args:
+            url (str): The URL to retrieve hyperlinks from.
+
+        Returns:
+            list: A list of hyperlinks found in the URL.
+        """
+        try:
+            src = RenderedPage().get_rendered_page(url).prettify()
+            parser = HyperlinkParser()
+            parser.feed(src)
+            return parser.hyperlinks
+        except Exception:
+            return []
+
+    def get_domain_hyperlinks(local_domain, url):
+        """
+        Retrieves domain-specific hyperlinks from a given URL.
+
+        Args:
+            local_domain (str): The local domain to filter hyperlinks.
+            url (str): The URL to retrieve hyperlinks from.
+
+        Returns:
+            list: A list of domain-specific hyperlinks found in the URL.
+        """
+        clean_links = []
+        hl = get_hyperlinks(url)
+        for link in hl:
+            clean_link = None
+            if re.search(rf"http.*?{local_domain}/.+", link):
+                url_obj = urlparse(link)
+                if url_obj.netloc == local_domain:
+                    clean_link = link
+            else:
+                clean_link = urljoin(url, link)
+            if clean_link is not None:
+                if clean_link.endswith("/"):
+                    clean_link = clean_link[:-1]
+                clean_links.append(clean_link)
+        return clean_links
+
+    statsvals = Items()
+
+    statsvals.add(Item("resp_code"))
+    statsvals.add(Item("finished"))
+    statsvals.add(Item("pending"))
+    statsvals.add(Item("saving"))
+
     while queue:
+        stattable.table([s.display for s in statsvals.items])
         url = queue.pop()
-        has_hash = re.search(r"(?<=#)\w+", url)
         if url in converted:
             continue
-        if has_hash:
-            continue
-        local_path = urlparse(url).path
-        parent_path, last_folder = os.path.split(local_path)
-        os.makedirs(f"markdown/{local_domain}/{convert_to_safe_url(parent_path)}", exist_ok=True)
+        local_path = os.path.join(local_domain, urlparse(url).path)
+        parent_path, path_tail = (
+            os.path.split(local_path) if "/" in local_path else (None, local_path)
+        )
+
+        if do_save:
+            os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
         content = None
-        converted.append(url)
-        statview1 = StatusWords()
-        statview2 = StatusWords()
-        statview3 = StatusWords()
 
         def update_status(data):
             value0 = data["resp_code"]
@@ -172,21 +291,29 @@ def crawl_website(url, tags_to_save=[], do_save=False):
             value3 = data["saving"]
 
             if value0 != 200:
-                statview1.response_code(value0)
+                statsvals.items[0].response_code(value0)
             else:
-                statview1.set("finished", value1)
-                statview2.set("pending", value2)
-                statview3.set("saving", value3)
+                statsvals.items[1].set("finished", value1)
+                statsvals.items[2].set("pending", value2)
+                statsvals.items[3].set("saving", value3)
 
-            stattable.dataframe([statview1.display, statview2.display])
             progress.progress(
-                max(i / (1 + i + len(queue)), max(0, i - len(queue)) / (1 + i + len(queue))),
-                text=f":orange[{statview3.display['value']}]",
+                max(
+                    i / (1 + i + len(queue)),
+                    max(0, i - len(queue)) / (1 + i + len(queue)),
+                ),
+                text=f":orange[{value3}]",
             )
 
         def fetch_content(url, data):
-            content = requests.get(url, timeout=5)
-            data["resp_code"] = content.status_code
+            src = (
+                RenderedPage()
+                .get_rendered_page(url)
+                .renderContents(encoding="UTF-8", prettyPrint=True)
+            )
+            content = src
+            # content = body.get_dom_attribute("outerHTML")
+            data["resp_code"] = requests.get(url).status_code
             data["downloaded"] = i
             data["remaining"] = 1 + len(queue)
             data["saving"] = local_path
@@ -195,38 +322,54 @@ def crawl_website(url, tags_to_save=[], do_save=False):
         try:
             content = fetch_content(url, data)
             update_status(data)
+
         except Exception as e:
             data["saving"] = f"{url} - {e}"
             update_status(data)
             continue
 
-        base_filename = f"{convert_to_safe_url(parent_path)}/{convert_to_safe_url(last_folder)}"
-        tag_items = BeautifulSoup(content.text, "html5lib").find_all(tags_to_save)
+        base_filename = f"{f'{convert_to_safe_url(parent_path)}/' if parent_path else '/'}{convert_to_safe_url(path_tail)}"
+        soup = BeautifulSoup(content, "html5lib")
+        tag_items = list(get_matching_tags(soup, tags_to_save))
+        # remove duplicates starting from the last item towards the first..
 
         md_output = None
         md_display = ""
         md_add = ""
-
+        expnd = st.expander(f":green[{base_filename}]") if not do_save else st.empty()
         for tag in tag_items:
-            tag = str(tag)
-            if re.search(r"\<\s*\w+\s+class\s*\=\s*(?=\"[^\"]*?(footer|menu|breadcrumbs|header)[^\"]*\")", tag):
+            # tag = tag.text
+            if re.search(
+                r"\<\s*\w+\s+class\s*\=\s*(?=\"[^\"]*?(footer|menu|breadcrumbs|header)[^\"]*\")",
+                tag.text,
+            ):
                 continue
             md_display = mdformat.text(convert_to_markdown(tag))
             if do_save:
                 md_add += "\n" + md_display + "\n"
             else:
-                st.markdown(md_display)
+                expnd.markdown(md_display)
 
         if do_save:
             md_output = mdformat.text(md_add)
-            with open(f"markdown/{local_domain}/{base_filename}.md", "w", encoding="UTF-8") as file:
+            with open(
+                f"markdown/{local_domain}/{base_filename}.md", "w", encoding="UTF-8"
+            ) as file:
                 file.write(md_output)
-
         i += 1
+
         for link in get_domain_hyperlinks(local_domain, url):
-            if link not in seen and (parent_path in link):
-                queue.append(link)
-                seen.append(link)
+            if (
+                re.search(r"(?<=#)[A-Za-z0-9]+", link)
+                or (link in seen)
+                or home_url not in link
+            ):
+                continue
+            queue.append(link)
+            seen.append(link)
+
+        converted.append(url)
+
     time.sleep(2)
     stattable.empty()
     progress.empty()
@@ -236,28 +379,163 @@ def main():
     """
     The main function that runs the web scraping application.
     """
-    st.title("Minor Scrapes")
-    st.write("Enter a URL and click 'Submit' to crawl the website and fill the markdown folder.")
-    columns = st.columns([0.8, 0.2])
-    url = columns[0].text_input(
-        "URL", placeholder="https://www.example.com", label_visibility="collapsed"
+
+    url = COLUMNS[0].text_input(
+        "URL",
+        placeholder="https://www.example.com",
+        value="https://example.com",
+        label_visibility="collapsed",
     )
-    notification = st.empty()
+
+    COLUMNS[0].write(
+        """
+    :red[ Saving is disabled on demo for obvious space saving reasons ]
+        """
+    )
+    COLUMNS[0].expander("Expand Instructions Here").markdown(
+        """
+
+    # Add specific attributes for tags..
+    1. Enter a URL ( the... `http://` is optional )
+    2. Select HTML tag to add Attribute
+    3. Select an attribute
+    4. Enter a Value to search for that Attr.
+    5. Click to Add to the content.
+
+    ### 'Crawl It' ... will:
+    - Crawl the website and display,
+    - Fill a markdown folder.
+
+        """
+    )
+
     if url.endswith("/"):
         url = url[:-1]
-    do_save = st.checkbox(
-        f"Do not Display. Save instead to folder? :n  :blue['./markdown/{urlparse(url).netloc}{os.path.split(urlparse(url).path)[0]}']"
+
+    parsed_folders = os.path.split(urlparse(url).path)[0]
+
+    up_level = COLUMNS[0].checkbox("Allow parent path?")
+    # Choices for HTML tags
+    if up_level:
+        parsed_folders = os.path.split(urlparse(parsed_folders).path)[0]
+
+    COLUMNS[0].markdown(
+        f"####  :blue[.../markdown/{urlparse(url).netloc}{parsed_folders}]"
     )
-    tags_to_save = st.multiselect(
-        "Tags to scrape",
-        ["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol", "img", "table", "pre", "code"],
-        ["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol", "img", "table", "pre"],
+    do_save = COLUMNS[0].checkbox(
+        f"Hide Display and download to drive?",
+        disabled=True,
+        help="Obv disabled  for cloud server, but handy at home..",
     )
-    if columns[1].button("Submit"):
-        crawl_website(url, tags_to_save, do_save)
-        notification.info("Crawling complete!")
-        time.sleep(2)
-        notification.empty()
+
+    STATE.HTML_TAGS_LIST = [
+        "article",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "a",
+        "p",
+        "ul",
+        "ol",
+        "li",
+        "img",
+        "table",
+        "pre",
+        "script",
+        "code",
+        "div",
+        "nav",
+        "section",
+        "style",
+        "footer",
+        "head",
+    ]
+
+    STATE.annotations = {
+        "action": "Specifies the URL where the form data should be submitted.",
+        "alt": "Provides an alternate text for an image.",
+        "content": "Specifies the value of the meta tag.",
+        "data": "Allows you to store custom data attributes.",
+        "href": "Specifies the URL of a linked resource.",
+        "id": "Provides a unique identifier for an element.",
+        "src": "Specifies the URL of an external resource, such as an image or script.",
+        "class": "Allows you to target elements by their class names.",
+        "name": "Sets a name for an input field, form, or iframe.",
+        "value": "Specifies the value of an input field or a button.",
+    }
+
+    COLUMNS[2].multiselect(
+        "",
+        STATE.HTML_TAGS_LIST,
+        ["h1", "h2", "h3", "a", "p", "pre"],
+        key="htmltags",
+        label_visibility="collapsed",
+    )
+
+    STATE.tags = STATE.get("tags", {})
+
+    # Create initial tag instance
+    for tag in STATE.HTML_TAGS_LIST:
+        if tag in STATE.htmltags:
+            if tag not in STATE.tags.keys():
+                STATE.tags[tag] = []
+        else:
+            if tag in STATE.tags.keys():
+                del STATE.tags[tag]
+    COLUMNS[2].columns([0.2, 0.8])
+
+    COLUMNS[2].write("### Tag enable above")
+    html_tag = COLUMNS[2].radio(
+        ":blue[HTML] ", STATE.htmltags, horizontal=True, key="strinp1"
+    )
+
+    attr_name = (
+        COLUMNS[2].radio(
+            ":red[Attr]", list(STATE.annotations.keys()), key="strinp2", horizontal=True
+        )
+        or ""
+    )
+    COLUMNS[2].write(STATE.annotations[attr_name])
+    val: str = COLUMNS[2].text_input("", label_visibility="collapsed", key="strinp3")
+
+    # Add new tag instance
+    if COLUMNS[2].button(
+        f"""Add :blue[{html_tag}] :red[{attr_name}]=":green[{val}]" """,
+        use_container_width=True,
+    ):
+        st.session_state.tags[html_tag].append({attr_name: val})
+    if COLUMNS[2].button("Clear", type="secondary", use_container_width=True):
+        st.session_state.tags[html_tag] = []
+
+    # make dataframe data..
+    df_data = {
+        "Tag": list(st.session_state.tags.keys()),
+        "Attr": [(v or None) for v in st.session_state.tags.values()],
+    }
+
+    # Display the dataframe
+    COLUMNS[0].dataframe(df_data, use_container_width=True, height=400)
+
+    COLUMNS[2].slider("Not yet implemented...", 1, 5, 2, 1, key="colsplit")
+
+    tag_requests = [{"tag": t, "attrs": None} for t in st.session_state.tags.keys()]
+
+    # Iterate over tags and properties
+    for tag, properties in st.session_state.tags.items():
+
+        for property_dict in properties:
+            # Create dictionary for each tag and properties
+            data = {"tag": tag, "attrs": property_dict}
+            tag_requests.append(data)  # Append the dictionary to the list
+
+    tag_requests
+    if COLUMNS[2].button("Crawl It", use_container_width=True, type="primary"):
+        crawl_website(url, tag_requests, do_save, up_level)
+        NOTIFICATION.info("Crawling complete!")
+        time.sleep(5)
+        NOTIFICATION.empty()
 
 
 if __name__ == "__main__":
