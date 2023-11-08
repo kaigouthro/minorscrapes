@@ -1,18 +1,17 @@
-
 class Item:
     def __init__(self, word=None, value=None):
         self.content = {
-            "aborted"      : {"title": "Aborted", "icon": "⛔️"},
-            "cancelled"    : {"title": "Cancelled", "icon": "❌"},
-            "cleaning"     : {"title": "Cleaning", "icon": "🧹"},
-            "compiling"    : {"title": "Compiling", "icon": "🔨"},
-            "complete"     : {"title": "Complete", "icon": "✅"},
-            "connecting"   : {"title": "Connecting", "icon": "🔗"},
-            "deleting"     : {"title": "Deleting", "icon": "🗑"},
+            "aborted": {"title": "Aborted", "icon": "⛔️"},
+            "cancelled": {"title": "Cancelled", "icon": "❌"},
+            "cleaning": {"title": "Cleaning", "icon": "🧹"},
+            "compiling": {"title": "Compiling", "icon": "🔨"},
+            "complete": {"title": "Complete", "icon": "✅"},
+            "connecting": {"title": "Connecting", "icon": "🔗"},
+            "deleting": {"title": "Deleting", "icon": "🗑"},
             "disconnecting": {"title": "Disconnecting", "icon": "🔌"},
-            "downloading"  : {"title": "Downloading", "icon": "⬇️"},
-            "error"        : {"title": "Error", "icon": "❗️"},
-            "exporting"    : {"title": "Exporting", "icon": "📤"},
+            "downloading": {"title": "Downloading", "icon": "⬇️"},
+            "error": {"title": "Error", "icon": "❗️"},
+            "exporting": {"title": "Exporting", "icon": "📤"},
             "failure"      : {"title": "Failure", "icon": "❌"},
             "finished"     : {"title": "Finished", "icon": "🎉"},
             "idle"         : {"title": "Idle", "icon": "🕛"},
@@ -32,38 +31,33 @@ class Item:
             "scanning"     : {"title": "Scanning", "icon": "🔍"},
             "sending"      : {"title": "Sending", "icon": "📤"},
             "size"         : {"title": "Size", "icon": "📐"},
-            "started"      : {"title": "Started", "icon": "🚀"},
-            "success"      : {"title": "Success", "icon": "✅"},
-            "syncing"      : {"title": "Syncing", "icon": "🔄"},
-            "uninstalling" : {"title": "Uninstalling", "icon": "🔧"},
-            "updating"     : {"title": "Updating", "icon": "🔃"},
-            "uploading"    : {"title": "Uploading", "icon": "⬆️"},
-            "validating"   : {"title": "Validating", "icon": "✅"},
-            "verifying"    : {"title": "Verifying", "icon": "✅"},
-            "waiting"      : {"title": "Waiting", "icon": "⌛️"},
-        }
+            "started": {"title": "Started", "icon": "🚀"},
+            "success": {"title": "Success", "icon": "✅"},
+            "syncing": {"title": "Syncing", "icon": "🔄"},
+            "uninstalling": {"title": "Uninstalling", "icon": "🔧"},
+            "updating": {"title": "Updating", "icon": "🔃"},
+            "uploading": {"title": "Uploading", "icon": "⬆️"},
+            "validating": {"title": "Validating", "icon": "✅"},
+            "verifying": {"title": "Verifying", "icon": "✅"},
+            "waiting": {"title": "Waiting", "icon": "⌛️"},
         self.display = {"status": "", "value": ""}
         self.set(word or "", value)
 
     def set(self, word: str, value=None):
         """
-        outtputto display: an icon and status word, as well as the state if exists
+        output to display: an icon and status word, as well as the state if exists
         """
         if word in self.content:
-            self.display["status"] = f"{ self.content[word]['icon']} {self.content[word]['title']}"
+            self.display["status"] = f"{self.content[word]['icon']} {self.content[word]['title']}"
         else:
             self.display["status"] = word or ""
 
         if value in self.content:
-            self.display["value"] = f"{ self.content[str(value)]['title']}"
+            self.display["value"] = f"{self.content[str(value)]['title']}"
         else:
             self.display["value"] = str(value)
         return self.display
 
-    def response_code(self, code):
-        """
-        Returns the HTTP response code as a string representation.
-        """
         response_codes = {
             100: "Continue",
             101: "Switching Protocols",
@@ -130,8 +124,8 @@ class Item:
         }
 
         if code in response_codes:
-            self.display['status'] = 'HTTP Respopnse Code'
-            self.display['value']  = response_codes[code]
+            self.display['status'] = 'HTTP Response Code'
+            self.display['value'] = response_codes[code]
         else:
             return "Unknown"
 
@@ -140,7 +134,7 @@ class Item:
 class Items:
     """ List of Items Container """
     def __init__(self):
-        self.items : list[Item] = []
+        self.items: list[Item] = []
 
     def add(self, item):
         self.items.append(item)
