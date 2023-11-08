@@ -1,5 +1,4 @@
-
-class Item:
+class StatusWordItem:
     def __init__(self, word=None, value=None):
         self.content = {
             "aborted"      : {"title": "Aborted", "icon": "⛔️"},
@@ -140,15 +139,15 @@ class Item:
 class Items:
     """ List of Items Container """
     def __init__(self):
-        self.items : list[Item] = []
+        self.items : list[StatusWordItem] = []
 
-    def add(self, item):
+    def add_item(self, item):
         self.items.append(item)
 
-    def remove(self, item):
+    def remove_item(self, item):
         self.items.remove(item)
 
-    def clear(self):
+    def clear_items(self):
         self.items.clear()
 
     def __len__(self):
