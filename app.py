@@ -79,6 +79,8 @@ def chromecheck():
             # Assuming you are not on an ARM/Mac...
             # ... Change as needed
             download_url = "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+            inst_wget = f"sudo apt install wget -y"
+            subprocess.run(inst_wget, shell=True, check=True)
             download_command = f"wget {download_url}"
             subprocess.run(download_command, shell=True, check=True)
 
