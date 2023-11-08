@@ -143,16 +143,21 @@ class Items:
         self.items : list[Item] = []
 
     def add(self, item):
+        """Add an Item object to the items list."""
         self.items.append(item)
 
     def remove(self, item):
+        """Remove an Item object from the items list."""
         self.items.remove(item)
 
     def clear(self):
+        """Clear the items list."""
         self.items.clear()
 
     def __len__(self):
+        """Return the length of the items list."""
         return len(self.items)
 
     def __iter__(self):
+        """Return an iterator for the items list."""
         return iter(self.items)
