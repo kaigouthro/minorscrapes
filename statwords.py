@@ -1,4 +1,5 @@
-class StatusWords:
+
+class Item:
     def __init__(self, word=None, value=None):
         self.content = {
             "aborted"      : {"title": "Aborted", "icon": "⛔️"},
@@ -58,8 +59,6 @@ class StatusWords:
         else:
             self.display["value"] = str(value)
         return self.display
-
-
 
     def response_code(self, code):
         """
@@ -135,3 +134,25 @@ class StatusWords:
             self.display['value']  = response_codes[code]
         else:
             return "Unknown"
+
+        return self.display
+
+class Items:
+    """ List of Items Container """
+    def __init__(self):
+        self.items : list[Item] = []
+
+    def add(self, item):
+        self.items.append(item)
+
+    def remove(self, item):
+        self.items.remove(item)
+
+    def clear(self):
+        self.items.clear()
+
+    def __len__(self):
+        return len(self.items)
+
+    def __iter__(self):
+        return iter(self.items)
