@@ -78,12 +78,14 @@ class RenderedPage:
         # Load the webpage in the headless browser
         self.driver.get(url)
 
-        # Wait for JavaScript to execute and render the page
-        await asyncio.sleep(5)
-
+        full_html = None
+        
         # Get the fully rendered HTML
-        full_html = self.driver.page_source
-
+        while full_html == None           
+            # Wait for JavaScript to execute and render the page
+            await asyncio.sleep(2)
+            full_html = self.driver.page_source
+            
         # Close the browser
         self.driver.quit()
 
