@@ -65,7 +65,7 @@ class RenderedPage:
     def __init__(self):
         self.driver = self.get_driver()
     
-    @st.cachhe_resource
+    @st.cache_resource
     def get_driver(self):
         # Set up the headless browser
         chrome_options = Options()
