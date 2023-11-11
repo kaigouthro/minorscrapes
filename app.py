@@ -266,6 +266,26 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
             value1 = data["downloaded"]
             value2 = data["remaining"]
             value3 = data["saving"]
+        
+            if value0 != 200:
+                statsvals.items[0].response_code(value0)
+            else:
+                statsvals.items[1].set("finished", value1)
+                statsvals.items[2].set("pending", value2)
+                statsvals.items[3].set("saving", value3)
+        
+            progress.progress(
+                max(
+                    i / (1 + i + len(queue)),
+                    max(0, i - len(queue)) / (1 + i + len(queue)),
+                ),
+                text=f":orange[{value3}]",
+            )
+        try:
+            value0 = data["resp_code"]
+            value1 = data["downloaded"]
+            value2 = data["remaining"]
+            value3 = data["saving"]
 
             if value0 != 200:
                 statsvals.items[0].response_code(value0)
@@ -293,15 +313,19 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
         data["downloaded"] = i
         data["remaining"] = 1 + len(self.queue)
         data["saving"] = local_path
-        return content
+
+        # Create a Beautiful Soup object of the fully rendered page
+        soup = BeautifulSoup(content, "html5lib")
+        full_html = self.driver.page_source
+        return soup
 
     try:
             content = fetch_content(url, data)
-            update_status(data)
+            update_status(data, i, local_path)
 
         except Exception as e:
             data["saving"] = f"{url} - {e}"
-            update_status(data)
+            update_status(data, i, local_path)
             continue
 
         base_filename = f"{f'{convert_to_safe_url(parent_path)}/' if parent_path else '/'}{convert_to_safe_url(path_tail)}"
