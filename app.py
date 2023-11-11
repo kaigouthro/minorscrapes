@@ -14,7 +14,7 @@ from markdownify import MarkdownConverter
 from statwords import StatusWordItem, Items
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
-SESSION_STATE = st.session_state
+APP_SESSION_STATE = st.session_state
 
 st.title("Minor Scrapes")
 
