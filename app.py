@@ -198,6 +198,20 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     def get_domain_hyperlinks(local_domain, url):
         """
         Retrieves domain-specific hyperlinks from a given URL.
+    
+        Args:
+            local_domain (str): The local domain to filter hyperlinks.
+            url (str): The URL to retrieve hyperlinks from.
+    
+        Returns:
+            list: A list of domain-specific hyperlinks found in the URL.
+        """
+        clean_links = []
+        hl = get_hyperlinks(url)
+        for link in hl:
+            clean_link = None
+        """
+        Retrieves domain-specific hyperlinks from a given URL.
 
         Args:
             local_domain (str): The local domain to filter hyperlinks.
