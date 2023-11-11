@@ -63,8 +63,8 @@ from webdriver_manager.firefox import GeckoDriverManager
 @st.cache_resource
 def get_driver():
     # Set up the headless browser
-    firefox_options = Options()
-    firefox_options.add_argument("--headless=new")  # Run the browser in headless mode
+    firefox_options = Options()    
+    firefox_options.headless = True  # Enable headless mode
     firefox_options.add_argument('--disable-gpu')
     return webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=firefox_options)
 
