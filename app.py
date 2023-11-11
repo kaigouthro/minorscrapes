@@ -189,8 +189,6 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
     stattable = LEFT_TABLE.empty()
 
-    browser = BrowserDrivver()
-
     class HyperlinkParser(HTMLParser):
         """
         A class that parses HTML and extracts hyperlinks.
