@@ -28,7 +28,7 @@ COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
 
 
-def get_matching_tags(soup, tags_plus_atrtibutes):
+def get_matching_tags_from_soup(soup, tags_plus_atrtibutes):
     """
     Get all tags that match the given parameters, but ignore tags if the parent exists
     if an attribute exists, only get tags witth that attribute, otherwise get all of tho9se tags
@@ -62,7 +62,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
 @st.experimental_singleton
-def get_driver():
+def setup_headless_browser():
     # Set up the headless browser
     chrome_options = Options()
     chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
@@ -82,7 +82,7 @@ class RenderedPage:
         chrome_options.add_argument('--disable-gpu')    
         return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
-    async def get_rendered_page(self, url):
+    async def load_page_in_headless_browser(self, url):
         # Load the webpage in the headless browser
         await self.loop.run_in_executor(None, self.driver.get, url)
 
@@ -99,7 +99,7 @@ class RenderedPage:
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
         
-def convert_to_markdown(soup):
+def convert_soup_to_markdown(soup):
     """
     Converts the input text to Markdown format.
 
@@ -120,7 +120,7 @@ def convert_to_markdown(soup):
     return converter.convert_soup(soup)
 
 
-def convert_to_safe_url(text):
+def sanitize_text_for_url(text):
     """
     Converts a text into a safe URL format.
 
@@ -139,7 +139,7 @@ def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
 
 
-def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
+def crawl_and_save_website_content(url, tags_to_save=[], do_save=False, up_level=False):
     """
     Crawls a website and saves or displays the content.
 
