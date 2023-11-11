@@ -67,7 +67,7 @@ def get_driver():
     chrome_options = Options()
     chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
     chrome_options.add_argument('--disable-gpu')    
-        return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
+    return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
 
 class RenderedPage:
     def __init__(self):
