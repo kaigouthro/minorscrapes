@@ -17,7 +17,6 @@ from selenium.webdriver.common.by import By
 
 from statwords import StatusWordItem, Items
 
-
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
 
@@ -26,7 +25,6 @@ st.title("Minor Scrapes")
 NOTIFICATION = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
-
 
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
@@ -53,7 +51,6 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
         for t in tags:
             if not t.find_parents(tag):
                 yield t
-
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
