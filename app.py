@@ -40,7 +40,7 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
     Yields:
         BeautifulSoup.Tag: tags that match the given parameters
     """
-        tag = tag_attr["tag"]
+    tag = tag_attr["tag"]
         # get all tags that match the tag
         tags = soup.find_all(tag)
         if tag_attr["attrs"] is not None:
@@ -60,7 +60,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 
 def get_driver():
     # Set up the headless browser
-    firefox_options = Options()    
+    firefox_options = Options()
     firefox_options.headless = True  # Enable headless mode
     firefox_options.add_argument('--disable-gpu')
     return webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=firefox_options)
@@ -71,7 +71,6 @@ def get_driver():
 
     def get_rendered_page(self, url):
         self.driver.start()
-        
         # Load the webpage in the headless browser
         self.driver.get(url)
 
