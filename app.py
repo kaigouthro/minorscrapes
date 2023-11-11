@@ -1,8 +1,8 @@
 import os
-import re
-import time
 import platform
+import re
 import subprocess
+import time
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
 from selenium.webdriver.common.by import By
 
-from statwords import StatusWordItem, Items
+from statwords import Items, StatusWordItem
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
@@ -25,6 +25,7 @@ st.title("Minor Scrapes")
 NOTIFICATION = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
+
 
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
@@ -51,16 +52,20 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
             if not t.find_parents(tag):
                 yield t
 
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
+
 class RenderedPage:
     def __init__(self):
         chrome_options = Options()
         chrome_options.add_argument("--headless")  # Run the browser in headless mode
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        self.driver = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()), options=chrome_options
+        )
 
     def get_rendered_page(self, url):
         # Load the webpage in the headless browser
@@ -76,6 +81,7 @@ class RenderedPage:
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
+
 
 def convert_to_markdown(soup):
     """
@@ -96,6 +102,7 @@ def convert_to_markdown(soup):
     )
     return converter.convert_soup(soup)
 
+
 def convert_to_safe_url(text):
     """
     Converts a text into a safe URL format.
@@ -110,8 +117,10 @@ def convert_to_safe_url(text):
     regex = r"[^a-zA-Z0-9-_]|\:"
     return re.sub(regex, subst, text, 0, re.DOTALL)
 
+
 def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
+
 
 def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     """
@@ -470,7 +479,6 @@ def main():
 
     # Iterate over tags and properties
     for tag, properties in st.session_state.tags.items():
-
         for property_dict in properties:
             # Create dictionary for each tag and properties
             data = {"tag": tag, "attrs": property_dict}
