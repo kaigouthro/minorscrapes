@@ -91,8 +91,10 @@ def fetch_webdriver():
     
 
 class RenderedPage:
-    def __init__(self):
-    def get_hyperlinks(url):
+    def __init__(self, url):
+        self.url = url
+    
+    def get_hyperlinks(self):
 
         """
         Retrieves all hyperlinks from a given URL.
