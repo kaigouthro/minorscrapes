@@ -258,10 +258,10 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
 
     statsvals = Items()
 
-    statsvals.add(StatusWordItem("resp_code"))
-    statsvals.add(StatusWordItem("finished"))
-    statsvals.add(StatusWordItem("pending"))
-    statsvals.add(StatusWordItem("saving"))
+    statsvals.add_item(StatusWordItem("resp_code"))
+    statsvals.add_item(StatusWordItem("finished"))
+    statsvals.add_item(StatusWordItem("pending"))
+    statsvals.add_item(StatusWordItem("saving"))
 
     while queue:
         stattable.table([s.display for s in statsvals.items])
