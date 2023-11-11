@@ -139,14 +139,14 @@ def convert_to_safe_url(text):
                 text=f":orange[{value3}]",
             )
 
-        from bs4 import BeautifulSoup
-        from markdownify import MarkdownConverter
-        # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(5)
+            from bs4 import BeautifulSoup
+            from markdownify import MarkdownConverter
+            # You can use explicit waits to wait for specific elements to appear on the page
+            time.sleep(5)
 
-        # Wait for JavaScript to execute and render the page
-        # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(5)
+            # Wait for JavaScript to execute and render the page
+            # You can use explicit waits to wait for specific elements to appear on the page
+            time.sleep(5)
         
         # Get the fully rendered HTML
         full_html = self.driver.page_source
