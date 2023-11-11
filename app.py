@@ -1,6 +1,6 @@
 import os
 import re
-import time
+import asyncio
 import platform
 import subprocess
 from collections import deque
@@ -72,13 +72,13 @@ class RenderedPage:
         chrome_options.add_argument('--disable-gpu')    
         return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
 
-    def get_rendered_page(self, url):
+    async def get_rendered_page(self, url):
         # Load the webpage in the headless browser
         self.driver.get(url)
 
         # Wait for JavaScript to execute and render the page
         # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(5)
+        await asyncio.sleep(5)
         
         # Get the fully rendered HTML
         full_html = self.driver.page_source
@@ -152,10 +152,11 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     converted = []
 
     if not os.path.exists("processed"):
-        os.mkdir("processed")
-
-    i = 0
-
+            src = (
+                await RenderedPage()
+                .get_rendered_page(url)
+                .renderContents(encoding="UTF-8", prettyPrint=True)
+            )
     progress = NOTIFICATION.progress(text="Crawling", value=1.0)
     data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
     stattable = LEFT_TABLE.empty()
@@ -194,7 +195,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             list: A list of hyperlinks found in the URL.
         """
         try:
-            src = RenderedPage().get_rendered_page(url).prettify()
+            src = await RenderedPage().get_rendered_page(url).prettify()
             parser = HyperlinkParser()
             parser.feed(src)
             return parser.hyperlinks
@@ -272,7 +273,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
 
         def fetch_content(url, data):
             src = (
-                RenderedPage()
+                await RenderedPage()
                 .get_rendered_page(url)
                 .renderContents(encoding="UTF-8", prettyPrint=True)
             )
