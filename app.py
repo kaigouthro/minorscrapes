@@ -57,17 +57,17 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
 
 @st.experimental_singleton
 def get_driver(options):
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    # Set up the headless browser
+    options = Options()
+    options.add_argument("--headless=new")  # Run the browser in headless mode
+    options.add_argument("--disable-gpu")       
+    options w"bdriver.Chrome(se"vice=Service(ChromeDriverManager().install()), options=options)
 
 class RenderedPage:
     def __init__(self):
-        # Set up the headless browser
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-        chrome_options.add_argument('--disable-gpu')       
-        self.driver = get_driver(chrome_options)
+        self.driver = get_driver()
 
-    def get_rendered_page(self, url):
+     get_rendered_page(self, url):
         # Load the webpage in the headless browser
         self.driver.get(url)
 
