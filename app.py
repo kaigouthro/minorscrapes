@@ -1,20 +1,22 @@
+import asyncio
 import os
 import re
-import asyncio
 import time
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
+
+import mdformat
+import requests
+import streamlit as st
+from bs4 import BeautifulSoup
+from markdownify import MarkdownConverter
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-from bs4 import BeautifulSoup
-import mdformat
-import requests
-import streamlit as st
-from markdownify import MarkdownConverter
-from statwords import StatusWordItem, Items
+
+from statwords import Items, StatusWordItem
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
@@ -24,6 +26,7 @@ st.title("Minor Scrapes")
 NOTIFICATION = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
+
 
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
@@ -51,17 +54,22 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
             if not t.find_parents(tag):
                 yield t
 
+
 class RenderedPage:
     def __init__(self):
         self.driver = self.get_driver()
-    
+
     @st.cache_resource
     def get_driver(self):
         # Set up the headless browser
         chrome_options = Options()
-        chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-        chrome_options.add_argument('--disable-gpu')    
-        return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
+        chrome_options.add_argument(
+            "--headless=new"
+        )  # Run the browser in headless mode
+        chrome_options.add_argument("--disable-gpu")
+        return webdriver.Chrome(
+            sevice=Service(ChromeDriverManager().install()), options=chrome_options
+        )
 
     async def get_rendered_page(self, url):
         # Load the webpage in the headless browser
@@ -70,13 +78,13 @@ class RenderedPage:
         # Wait for JavaScript to execute and render the page
         # You can use explicit waits to wait for specific elements to appear on the page
         await asyncio.sleep(5)
-        
+
         # Get the fully rendered HTML
         full_html = self.driver.page_source
-        
+
         # Close the browser
         self.driver.quit()
-        
+
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html.parser")
         return soup
@@ -133,7 +141,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
     """
     if tags_to_save is None:
         tags_to_save = []
-        
+
     url = add_https(url)
     local_domain = urlparse(url).netloc
     local_path = urlparse(url).path
@@ -145,14 +153,14 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
     seen = []
     converted = []
     i = 0
-    local_path = ''
+    local_path = ""
 
     if not os.path.exists("processed"):
-            src = (
-                await RenderedPage()
-                .get_rendered_page(url)
-                .renderContents(encoding="UTF-8", prettyPrint=True)
-            )
+        (
+            await RenderedPage()
+            .get_rendered_page(url)
+            .renderContents(encoding="UTF-8", prettyPrint=True)
+        )
     progress = NOTIFICATION.progress(text="Crawling", value=1.0)
     data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
     stattable = LEFT_TABLE.empty()
@@ -180,7 +188,6 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
                         self.hyperlinks.append(attr[1])
 
     def get_hyperlinks(url):
-
         """
         Retrieves all hyperlinks from a given URL.
 
@@ -486,7 +493,6 @@ def main():
 
     # Iterate over tags and properties
     for tag, properties in st.session_state.tags.items():
-
         for property_dict in properties:
             # Create dictionary for each tag and properties
             data = {"tag": tag, "attrs": property_dict}
