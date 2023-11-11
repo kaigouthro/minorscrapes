@@ -30,7 +30,6 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
     Get all tags that match the given parameters, but ignore tags if the parent exists
     if an attribute exists, only get tags witth that attribute, otherwise get all of tho9se tags
 
-
     Args:
         soup (beautifulsoup object): BeautifulSoup Object
         tags_attr (list): list of dictionary objects describing the tags and their attributes
