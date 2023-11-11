@@ -61,7 +61,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-st.cache_resource
+@st.cache_resource
 def get_driver():
     # Set up the headless browser
     chrome_options = Options()
