@@ -55,19 +55,19 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
             if not t.find_parents(tag):
                 yield t
 
-
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
+from webdriver_manager.firefox import GeckoDriverManager
 
 @st.cache_resource
 def get_driver():
     # Set up the headless browser
-    chrome_options = Options()
-    chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-    chrome_options.add_argument('--disable-gpu')    
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    firefox_options = Options()
+    firefox_options.add_argument("--headless=new")  # Run the browser in headless mode
+    firefox_options.add_argument('--disable-gpu')
+    return webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=firefox_options)
+
 
 class RenderedPage:
     def __init__(self):
