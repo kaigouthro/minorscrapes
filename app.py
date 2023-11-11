@@ -61,43 +61,37 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-@st.cache_resource
-def get_driver():
-    # Set up the headless browser
-    chrome_options = Options()
-    chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-    return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
-
-
 class RenderedPage:
     def __init__(self):
-        self.loop = asyncio.get_event_loop()
-        self.driver = self.loop.run_until_complete(self.create_driver())
-
-    async def create_driver(self):
+        self.driver = self.get_driver()
+    
+    @st.cachhe_resource
+    def get_driver(self):
         # Set up the headless browser
         chrome_options = Options()
         chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
         chrome_options.add_argument('--disable-gpu')    
-        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
 
-    async def get_rendered_page(self, url):
+    def get_rendered_page(self, url):
         # Load the webpage in the headless browser
-        await self.loop.run_in_executor(None, self.driver.get, url)
+        self.driver.get(url)
 
         # Wait for JavaScript to execute and render the page
-        await asyncio.sleep(5)
+        # You can use explicit waits to wait for specific elements to appear on the page
+        time.sleep(5)
         
         # Get the fully rendered HTML
-        await self.loop.run_in_executor(None, self.driver.page_source)
+        full_html = self.driver.page_source
         
         # Close the browser
-        await self.loop.run_in_executor(None, self.driver.quit)
-
+        self.driver.quit()
+        
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
-        
+
+
 def convert_to_markdown(soup):
     """
     Converts the input text to Markdown format.
