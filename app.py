@@ -62,20 +62,20 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 @st.experimental_singleton
 def get_driver(options):
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    # Set up the headless browser
+    options = Options()
+    options.add_argument("--headless=new")  # Run the browser in headless mode
+    options.add_argument("--disable-gpu")       
+    options w"bdriver.Chrome(se"vice=Service(ChromeDriverManager().install()), options=options)
 
 class RenderedPage:
     """
     This class is responsible for rendering a webpage in a headless browser and returning a BeautifulSoup object of the fully rendered page. It uses Selenium WebDriver to load the webpage in a headless Chrome browser, waits for JavaScript to execute and render the page, retrieves the fully rendered HTML, and then creates a BeautifulSoup object of the fully rendered page.
     """
     def __init__(self):
-        # Set up the headless browser
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-        chrome_options.add_argument('--disable-gpu')       
-        self.driver = get_driver(chrome_options)
+        self.driver = get_driver()
 
-    def get_rendered_page(self, url):
+     get_rendered_page(self, url):
         # Load the webpage in the headless browser
         self.driver.get(url)
 
