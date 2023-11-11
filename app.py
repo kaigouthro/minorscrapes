@@ -48,7 +48,15 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
         if tag_attr["attrs"] is not None:
             attrs = tag_attr["attrs"]
             for attr in attrs:
-                # get all tags with those attributes
+        def fetch_content(url, data, i, local_path):
+            src = await RenderedPage().get_rendered_page(url).renderContents(encoding="UTF-8", prettyPrint=True)
+            content = src
+            # content = body.get_dom_attribute("outerHTML")
+            data["resp_code"] = requests.get(url, timeout=5).status_code
+            data["downloaded"] = i
+            data["remaining"] = 1 + len(queue)
+            data["saving"] = local_path
+            return content
                 tags = [t for t in tags if t.has_attr(attr) or t.has_attr(attr + "s")]
         for t in tags:
             if not t.find_parents(tag):
@@ -256,7 +264,7 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i
         content = None
         i += 1
 
-        def update_status(data):
+        def update_status(data, i):
             value0 = data["resp_code"]
             value1 = data["downloaded"]
             value2 = data["remaining"]
@@ -276,8 +284,6 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i
                 ),
                 text=f":orange[{value3}]",
             )
-
-        nonlocal i
         def fetch_content(url, data, local_path):
             src = await RenderedPage().get_rendered_page(url).renderContents(encoding="UTF-8", prettyPrint=True)
             content = src
@@ -290,11 +296,11 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i
 
         try:
             content = await fetch_content(url, data, i, local_path)
-            update_status(data)
+            update_status(data, i)
 
         except Exception as e:
             data["saving"] = f"{url} - {e}"
-            update_status(data)
+            update_status(data, i)
             continue
 
         base_filename = f"{f'{convert_to_safe_url(parent_path)}/' if parent_path else '/'}{convert_to_safe_url(path_tail)}"
@@ -472,7 +478,7 @@ async def main():
 
     # Add new tag instance
     if COLUMNS[2].button(
-        f"Add :blue[{html_tag}] :red[{attr_name}]=':green[{val}]' ",
+        "Add :blue[{}] :red[{}]=':green[{}]' ".format(html_tag, attr_name, val),
         use_container_width=True,
     ):
         st.session_state.tags[html_tag].append({attr_name: val})
@@ -481,20 +487,27 @@ async def main():
 
     # make dataframe data..
     df_data = {
-        "Tag": list(st.session_state.tags.keys()),
-        "Attr": [(v or None) for v in st.session_state.tags.values()],
-    }
 
-    # Display the dataframe
-    COLUMNS[0].dataframe(df_data, use_container_width=True, height=400)
+        def update_status(data, i):
+            value0 = data["resp_code"]
+            value1 = data["downloaded"]
+            value2 = data["remaining"]
+            value3 = data["saving"]
 
-    COLUMNS[2].slider("Not yet implemented", 1, 5, 2, 1, key="colsplit")
+            if value0 != 200:
+                statsvals.items[0].response_code(value0)
+            else:
+                statsvals.items[1].set("finished", value1)
+                statsvals.items[2].set("pending", value2)
+                statsvals.items[3].set("saving", value3)
 
-    tag_requests = [{"tag": t, "attrs": None} for t in st.session_state.tags.keys()]
-
-    # Iterate over tags and properties
-    for tag, properties in st.session_state.tags.items():
-
+            progress.progress(
+                max(
+                    i / (1 + i + len(queue)),
+                    max(0, i - len(queue)) / (1 + i + len(queue)),
+                ),
+                text=f":orange[{value3}]",
+            )
         for property_dict in properties:
             # Create dictionary for each tag and properties
             data = {"tag": tag, "attrs": property_dict}
