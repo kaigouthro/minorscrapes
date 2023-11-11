@@ -67,7 +67,7 @@ def chromecheck():
         print("The code is running on Linux.")
 
         # Check if Google Chrome is already installed
-        check_command = "/path/to/google-chrome-stable --version"
+        chrome_version_check_command = "/path/to/google-chrome-stable --version"
         result = subprocess.run(
             check_command, shell=True, capture_output=True, text=True
         )
@@ -79,7 +79,8 @@ def chromecheck():
             download_url = "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
             
             # Download the package using curl
-            download_command = f"curl -o google-chrome-stable_current_amd64.deb {download_url}"
+            chrome_download_command = f"curl -o google-chrome-stable_current_amd64.deb {download_url}"
+            chrome_install_command = "dpkg -x google-chrome-stable_current_amd64.deb ~/install/"
             subprocess.run(download_command, shell=True, check=True)
 
             # Install the downloaded package using dpkg in user-specific location
