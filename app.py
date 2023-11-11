@@ -63,7 +63,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 
 @st.cache_resource
 def get_driver():
-    temp_dir = os.path.join('~/opt', 'tmp')
+    temp_dir = os.path.join('~/', 'tmp')
     # Download the Firefox Portable edition to a temporary folder
     os.makedirs(temp_dir, exist_ok=True)
     binary_path = os.path.join(temp_dir, 'firefox')
