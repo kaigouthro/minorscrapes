@@ -338,7 +338,7 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i
                     i / (1 + i + len(queue)),
                     max(0, i - len(queue)) / (1 + i + len(queue)),
                 ),
-                value3 = data["saving"]
+                value3 = data["saving"],
                 text=f":orange[{value3 if value3 else ''}]",
             )
     stattable.empty()
