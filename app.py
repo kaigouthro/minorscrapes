@@ -322,7 +322,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
 
         except Exception as e:
             data["saving"] = f"{url} - {e}"
-            update_status(data)
+            update_status(data, i, queue)
             continue
 
         base_filename = f"{f'{convert_to_safe_url(parent_path)}/' if parent_path else '/'}{convert_to_safe_url(path_tail)}"
