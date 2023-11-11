@@ -131,23 +131,23 @@ def convert_to_safe_url(text):
                 statsvals.items[2].set("pending", value2)
                 statsvals.items[3].set("saving", value3)
 
-            progress.progress(
-                max(
-                    i / (1 + i + len(queue)),
-                    max(0, i - len(queue)) / (1 + i + len(queue)),
-                ),
-                text=f":orange[{value3}]",
-            )
+        progress.progress(
+            max(
+                i / (1 + i + len(queue)),
+                max(0, i - len(queue)) / (1 + i + len(queue)),
+            ),
+            text=f":orange[{value3}]",
+        )
 
-            # You can use explicit waits to wait for specific elements to appear on the page
-            time.sleep(5)
+        # You can use explicit waits to wait for specific elements to appear on the page
+        time.sleep(5)
 
-            # Wait for JavaScript to execute and render the page
-            # You can use explicit waits to wait for specific elements to appear on the page
-            time.sleep(5)
+        # Wait for JavaScript to execute and render the page
+        # You can use explicit waits to wait for specific elements to appear on the page
+        time.sleep(5)
 
-            from bs4 import BeautifulSoup
-            from markdownify import MarkdownConverter
+        from bs4 import BeautifulSoup
+        from markdownify import MarkdownConverter
         
         # Get the fully rendered HTML
         full_html = self.driver.page_source
