@@ -1,8 +1,3 @@
-can you make the`get_rendered_page`  async?
-
-
-
-
 import os
 import re
 import time
