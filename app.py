@@ -28,7 +28,6 @@ COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
 
 
-
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
     Get all tags that match the given parameters, but ignore tags if the parent exists
@@ -43,17 +42,17 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
         BeautifulSoup.Tag: tags that match the given parameters
     """
     for tag_attr in tags_plus_atrtibutes:
-        tag = tag_attr["tag"]
-        # get all tags that match the tag
-        tags = soup.find_all(tag)
-        if tag_attr["attrs"] is not None:
-            attrs = tag_attr["attrs"]
-            for attr in attrs:
-                # get all tags with those attributes
-                tags = [t for t in tags if t.has_attr(attr) or t.has_attr(f"{attr}s")]
-        for t in tags:
-            if not t.find_parents(tag):
-                yield t
+    tag = tag_attr["tag"]
+    # get all tags that match the tag
+    tags = soup.find_all(tag)
+    if tag_attr["attrs"] is not None:
+        attrs = tag_attr["attrs"]
+        for attr in attrs:
+            # get all tags with those attributes
+            tags = [t for t in tags if t.has_attr(attr) or t.has_attr(f"{attr}s")]
+    for t in tags:
+        if not t.find_parents(tag):
+            yield t
 
 
 from selenium import webdriver
@@ -63,30 +62,30 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 class RenderedPage:
-    def __init__(self):
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Run the browser in headless mode
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
+def __init__(self):
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Run the browser in headless mode
+    self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
 
 
-    def get_rendered_page(self, url):
-                
-        # Load the webpage in the headless browser
-        self.driver.get(url)
+def get_rendered_page(self, url):
+            
+    # Load the webpage in the headless browser
+    self.driver.get(url)
 
-        # Wait for JavaScript to execute and render the page
-        # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(2)
-        
-        # Get the fully rendered HTML
-        full_html = self.driver.page_source
-        
-        # # Close the browser
-        # self.driver.quit()
-        
-        # Create a Beautiful Soup object of the fully rendered page
-        soup = BeautifulSoup(full_html, "html5lib")
-        return soup
+    # Wait for JavaScript to execute and render the page
+    # You can use explicit waits to wait for specific elements to appear on the page
+    time.sleep(2)
+    
+    # Get the fully rendered HTML
+    full_html = self.driver.page_source
+    
+    # # Close the browser
+    # self.driver.quit()
+    
+    # Create a Beautiful Soup object of the fully rendered page
+    soup = BeautifulSoup(full_html, "html5lib")
+    return soup
 
 
 def convert_to_markdown(soup):
@@ -154,76 +153,76 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
 
     i = 0
 
-    progress = NOTIFICATION.progress(text="Crawling", value=1.0)
-    data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
-    stattable = LEFT_TABLE.empty()
+progress = NOTIFICATION.progress(text="Crawling", value=1.0)
+data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
+stattable = LEFT_TABLE.empty()
 
-    class HyperlinkParser(HTMLParser):
+class HyperlinkParser(HTMLParser):
+    """
+    A class that parses HTML and extracts hyperlinks.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.hyperlinks = []
+
+    def handle_starttag(self, tag, attrs):
         """
-        A class that parses HTML and extracts hyperlinks.
-        """
-
-        def __init__(self):
-            super().__init__()
-            self.hyperlinks = []
-
-        def handle_starttag(self, tag, attrs):
-            """
-            Handles the start tag of an HTML element and extracts hyperlinks.
-
-            Args:
-                tag (str): The name of the HTML tag.
-                attrs (list): A list of attribute-value pairs for the HTML tag.
-            """
-            if tag == "a":
-                for attr in attrs:
-                    if attr[0] == "href":
-                        self.hyperlinks.append(attr[1])
-
-    def get_hyperlinks(url):
-
-        """
-        Retrieves all hyperlinks from a given URL.
+        Handles the start tag of an HTML element and extracts hyperlinks.
 
         Args:
-            url (str): The URL to retrieve hyperlinks from.
-
-        Returns:
-            list: A list of hyperlinks found in the URL.
+            tag (str): The name of the HTML tag.
+            attrs (list): A list of attribute-value pairs for the HTML tag.
         """
-        try:
-            src = RenderedPage().get_rendered_page(url).prettify()
-            parser = HyperlinkParser()
-            parser.feed(src)
-            return parser.hyperlinks
-        except Exception:
-            return []
+        if tag == "a":
+            for attr in attrs:
+                if attr[0] == "href":
+                    self.hyperlinks.append(attr[1])
 
-    def get_domain_hyperlinks(local_domain, url):
-        """
-        Retrieves domain-specific hyperlinks from a given URL.
+def get_hyperlinks(url):
 
-        Args:
-            local_domain (str): The local domain to filter hyperlinks.
-            url (str): The URL to retrieve hyperlinks from.
+    """
+    Retrieves all hyperlinks from a given URL.
 
-        Returns:
-            list: A list of domain-specific hyperlinks found in the URL.
-        """
-        clean_links = []
-        hl = get_hyperlinks(url)
+    Args:
+        url (str): The URL to retrieve hyperlinks from.
+
+    Returns:
+        list: A list of hyperlinks found in the URL.
+    """
+    try:
+        src = RenderedPage().get_rendered_page(url).prettify()
+        parser = HyperlinkParser()
+        parser.feed(src)
+        return parser.hyperlinks
+    except Exception:
+        return []
+
+def get_domain_hyperlinks(local_domain, url):
+    """
+    Retrieves domain-specific hyperlinks from a given URL.
+
+    Args:
+        local_domain (str): The local domain to filter hyperlinks.
+        url (str): The URL to retrieve hyperlinks from.
+
+    Returns:
+        list: A list of domain-specific hyperlinks found in the URL.
+    """
+    clean_links = []
+    hl = get_hyperlinks(url)
         for link in hl:
-            clean_link = None
-            if re.search(rf"http.*?{local_domain}/.+", link):
-                url_obj = urlparse(link)
-                if url_obj.netloc == local_domain:
-                    clean_link = link
-            else:
-                clean_link = urljoin(url, link)
-            if clean_link is not None:
-                if clean_link.endswith("/"):
-                    clean_link = clean_link[:-1]
-                clean_links.append(clean_link)
+        clean_link = None
+        if re.search(rf"http.*?{local_domain}/.+", link):
+            url_obj = urlparse(link)
+            if url_obj.netloc == local_domain:
+                clean_link = link
+        else:
+            clean_link = urljoin(url, link)
+        if clean_link is not None:
+            if clean_link.endswith("/"):
+                clean_link = clean_link[:-1]
+            clean_links.append(clean_link)
         return clean_links
 
     statsvals = Items()
@@ -233,74 +232,74 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     statsvals.add_item(StatusWordItem("pending"))
     statsvals.add_item(StatusWordItem("saving"))
 
-    while queue:
-        stattable.table([s.display for s in statsvals.items])
-        url = queue.pop()
-        if url in converted:
-            continue
-        local_path = os.path.join(local_domain, urlparse(url).path)
-        parent_path, path_tail = (
-            os.path.split(local_path) if "/" in local_path else (None, local_path)
+while queue:
+    stattable.table([s.display for s in statsvals.items])
+    url = queue.pop()
+    if url in converted:
+        continue
+    local_path = os.path.join(local_domain, urlparse(url).path)
+    parent_path, path_tail = (
+        os.path.split(local_path) if "/" in local_path else (None, local_path)
+    )
+
+    if do_save:
+        os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
+    content = None
+
+    def update_status(data):
+        value0 = data["resp_code"]
+        value1 = data["downloaded"]
+        value2 = data["remaining"]
+        value3 = data["saving"]
+
+        if value0 != 200:
+            statsvals.items[0].response_code(value0)
+        else:
+            statsvals.items[1].set("finished", value1)
+            statsvals.items[2].set("pending", value2)
+            statsvals.items[3].set("saving", value3)
+
+        progress.progress(
+            max(
+                i / (1 + i + len(queue)),
+                max(0, i - len(queue)) / (1 + i + len(queue)),
+            ),
+            text=f":orange[{value3}]",
         )
 
-        if do_save:
-            os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
-        content = None
+    def fetch_content(url, data):
+        src = (
+            RenderedPage()
+            .get_rendered_page(url)
+            .renderContents(encoding="UTF-8", prettyPrint=True)
+        )
+        content = src
+        # content = body.get_dom_attribute("outerHTML")
+        data["resp_code"] = requests.get(url).status_code
+        data["downloaded"] = i
+        data["remaining"] = 1 + len(queue)
+        data["saving"] = local_path
+        return content
 
-        def update_status(data):
-            value0 = data["resp_code"]
-            value1 = data["downloaded"]
-            value2 = data["remaining"]
-            value3 = data["saving"]
+    try:
+        content = fetch_content(url, data)
+        update_status(data)
 
-            if value0 != 200:
-                statsvals.items[0].response_code(value0)
-            else:
-                statsvals.items[1].set("finished", value1)
-                statsvals.items[2].set("pending", value2)
-                statsvals.items[3].set("saving", value3)
+    except Exception as e:
+        data["saving"] = f"{url} - {e}"
+        update_status(data)
+        continue
 
-            progress.progress(
-                max(
-                    i / (1 + i + len(queue)),
-                    max(0, i - len(queue)) / (1 + i + len(queue)),
-                ),
-                text=f":orange[{value3}]",
-            )
+    base_filename = f"{f'{convert_to_safe_url(parent_path)}/' if parent_path else '/'}{convert_to_safe_url(path_tail)}"
+    soup = BeautifulSoup(content, "html5lib")
+    tag_items = list(get_matching_tags(soup, tags_to_save))
+    # remove duplicates starting from the last item towards the first..
 
-        def fetch_content(url, data):
-            src = (
-                RenderedPage()
-                .get_rendered_page(url)
-                .renderContents(encoding="UTF-8", prettyPrint=True)
-            )
-            content = src
-            # content = body.get_dom_attribute("outerHTML")
-            data["resp_code"] = requests.get(url).status_code
-            data["downloaded"] = i
-            data["remaining"] = 1 + len(queue)
-            data["saving"] = local_path
-            return content
-
-        try:
-            content = fetch_content(url, data)
-            update_status(data)
-
-        except Exception as e:
-            data["saving"] = f"{url} - {e}"
-            update_status(data)
-            continue
-
-        base_filename = f"{f'{convert_to_safe_url(parent_path)}/' if parent_path else '/'}{convert_to_safe_url(path_tail)}"
-        soup = BeautifulSoup(content, "html5lib")
-        tag_items = list(get_matching_tags(soup, tags_to_save))
-        # remove duplicates starting from the last item towards the first..
-
-        md_output = None
-        md_display = ""
-        md_add = ""
-        expnd = st.expander(f":green[{base_filename}]") if not do_save else st.empty()
-        for tag in tag_items:
+    md_output = None
+    md_display = ""
+    md_add = ""
+    expnd = st.expander(f":green[{base_filename}]") if not do_save else st.empty()
+    for tag in tag_items:
             # tag = tag.text
             if re.search(
                 r"\<\s*\w+\s+class\s*\=\s*(?=\"[^\"]*?(footer|menu|breadcrumbs|header)[^\"]*\")",
