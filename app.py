@@ -40,7 +40,8 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
     Yields:
         BeautifulSoup.Tag: tags that match the given parameters
     """
-    tag = tag_attr["tag"]
+    for tag_attr in tags_plus_atrtibutes:
+        tag = tag_attr["tag"]
         # get all tags that match the tag
         tags = soup.find_all(tag)
         if tag_attr["attrs"] is not None:
