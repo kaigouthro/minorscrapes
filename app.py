@@ -13,13 +13,10 @@ import requests
 import streamlit as st
 from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
-from selenium.webdriver import Chrome, ChromeOptions
-from selenium.webdriver.common.by import By
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
 
-from statwords import StatusWordItem, Items
+from statwords import Items, StatusWordItem
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
@@ -73,7 +70,6 @@ def chromecheck():
 
         # Google Chrome is not installed?
         if result.returncode != 0:
-
             # Proceed with downloading and installing
             # Assuming you are not on an ARM/Mac...
             # ... Change as needed
@@ -115,7 +111,7 @@ class RenderedPage:
         # Wait for JavaScript to execute and render the page
         # You can use explicit waits to wait for specific elements to appear on the page
         time.sleep(3)
-        
+
         # Get the fully rendered HTML
         full_html = self.driver.page_source
         # Close the browser
@@ -219,7 +215,6 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
                         self.hyperlinks.append(attr[1])
 
     def get_hyperlinks(url):
-
         """
         Retrieves all hyperlinks from a given URL.
 
@@ -525,7 +520,6 @@ def main():
 
     # Iterate over tags and properties
     for tag, properties in st.session_state.tags.items():
-
         for property_dict in properties:
             # Create dictionary for each tag and properties
             data = {"tag": tag, "attrs": property_dict}
