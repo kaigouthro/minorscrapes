@@ -63,7 +63,7 @@ def chromecheck():
         print("The code is running on Linux.")
 
         # Check if Google Chrome is already installed
-        check_command = "google-chrome-stable --version"
+        check_command = "/path/to/google-chrome-stable --version"
         result = subprocess.run(
             check_command, shell=True, capture_output=True, text=True
         )
@@ -71,26 +71,25 @@ def chromecheck():
         # Google Chrome is not installed?
         if result.returncode != 0:
             # Proceed with downloading and installing
-            # Assuming you are not on an ARM/Mac...
-            # ... Change as needed
             download_url = "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
-            inst_wget = f"sudo apt install wget -y"
-            subprocess.run(inst_wget, shell=True, check=True)
-            download_command = f"wget {download_url}"
+            
+            # Download the package using curl
+            download_command = f"curl -o google-chrome-stable_current_amd64.deb {download_url}"
             subprocess.run(download_command, shell=True, check=True)
 
-            # Install the downloaded package using dpkg
-            install_command = "sudo dpkg -i google-chrome-stable_current_amd64.deb"
+            # Install the downloaded package using dpkg in user-specific location
+            install_command = "dpkg -x google-chrome-stable_current_amd64.deb ~/install/"
             subprocess.run(install_command, shell=True, check=True)
 
             # Clean up the downloaded package
-            cleanup_command = "sudo rm google-chrome-stable_current*"
+            cleanup_command = "rm google-chrome-stable_current*"
             subprocess.run(cleanup_command, shell=True)
         else:
             # Google Chrome is already installed
             print("Chrome is already installed.")
     else:
         print("The code is not running on Linux.\n\nPlease install Chrome")
+
 
 
 if "CHECKED" not in st.session_state:
@@ -117,7 +116,7 @@ class RenderedPage:
         # Close the browser
         self.driver.quit()
         # Create a Beautiful Soup object of the fully rendered page
-        soup = BeautifulSoup(full_html, "html.parser")
+        soup = BeautifulSoup(full_html, "html5lib")
         return soup
 
 
