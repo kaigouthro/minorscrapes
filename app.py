@@ -19,7 +19,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 
-from statwords import Item, Items
+from statwords import StatusWordItem, Items
 
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
@@ -267,10 +267,10 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
 
     statsvals = Items()
 
-    statsvals.add(Item("resp_code"))
-    statsvals.add(Item("finished"))
-    statsvals.add(Item("pending"))
-    statsvals.add(Item("saving"))
+    statsvals.add(StatusWordItem("resp_code"))
+    statsvals.add(StatusWordItem("finished"))
+    statsvals.add(StatusWordItem("pending"))
+    statsvals.add(StatusWordItem("saving"))
 
     while queue:
         stattable.table([s.display for s in statsvals.items])
