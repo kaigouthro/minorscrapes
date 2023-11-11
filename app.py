@@ -66,7 +66,7 @@ def get_driver():
     # Download the Firefox Portable edition to a temporary folder
     os.makedirs(temp_dir, exist_ok=True)
     binary_path = os.path.join(temp_dir, 'firefox')
-    binary_url = 'https://download.mozilla.org/?product=firefox-portable-latest-ssl&os=win64&lang=en-US'  # Replace with the URL of the Firefox Portable edition
+    binary_url = 'https://download.mozilla.org/?product=firefox-latest-ssl&os=linux&lang=en-US'  # Replace with the URL of the Firefox Portable edition
     
     response = requests.get(binary_url, stream=True)
     response.raise_for_status()
