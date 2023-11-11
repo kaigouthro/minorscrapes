@@ -14,7 +14,7 @@ from markdownify import MarkdownConverter
 from statwords import StatusWordItem, Items
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
-APP_SESSION_STATE = st.session_state
+STREAMLIT_SESSION_STATE = st.session_state
 
 st.title("Minor Scrapes")
 
@@ -67,7 +67,7 @@ from selenium.webdriver.firefox.service import Service
 from webdriver_manager.firefox import GeckoDriverManager
 
 @st.cache_resource
-def get_driver():
+def fetch_webdriver():
     temp_dir = os.path.join('/opt', 'tmp')
     # Download the Firefox Portable edition to a temporary folder
     os.makedirs(temp_dir, exist_ok=True)
@@ -92,29 +92,26 @@ def get_driver():
 
 class RenderedPage:
     def __init__(self):
-        self.driver = get_driver()
+    def get_hyperlinks(url):
 
-    def get_rendered_page(self, url):
-                
-        # Load the webpage in the headless browser
-        self.driver.get(url)
+        """
+        Retrieves all hyperlinks from a given URL.
 
-        # Wait for JavaScript to execute and render the page
-        # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(5)
-        
-        # Get the fully rendered HTML
-        full_html = self.driver.page_source
-        
-        # # Close the browser
-        # self.driver.quit()
-        
-        # Create a Beautiful Soup object of the fully rendered page
-        soup = BeautifulSoup(full_html, "html5lib")
-        return soup
+        Args:
+            url (str): The URL to retrieve hyperlinks from.
 
+        Returns:
+            list: A list of hyperlinks found in the URL.
+        """
+        try:
+            src = RenderedPage().get_rendered_page(url).prettify()
+            parser = HyperlinkParser()
+            parser.feed(src)
+            return parser.hyperlinks
+        except Exception:
+            return []
 
-def convert_to_markdown(soup):
+    def extract_domain_specific_hyperlinks(local_domain, url):
     """
     Converts the input text to Markdown format.
 
@@ -154,7 +151,7 @@ def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
 
 
-def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
+def scrape_website(url, tags_to_save=None, save_content=False, up_level=False):
     """
     Crawls a website and saves or displays the content.
 
@@ -208,7 +205,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
                     if attr[0] == "href":
                         self.hyperlinks.append(attr[1])
 
-    def get_hyperlinks(url):
+    def extract_hyperlinks(url):
 
         """
         Retrieves all hyperlinks from a given URL.
@@ -261,7 +258,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
     statsvals.add_item(StatusWordItem("pending"))
     statsvals.add_item(StatusWordItem("saving"))
 
-def update_status(data, i, queue, progress, statsvals):
+def refresh_status(data, i, queue, progress, statsvals):
     value0 = data["resp_code"]
     value1 = data["downloaded"]
     value2 = data["remaining"]
@@ -282,7 +279,7 @@ def update_status(data, i, queue, progress, statsvals):
         text=f":orange[{value3}]",
     )
 
-def fetch_content(url, data, i, queue):
+def retrieve_webpage_content(url, data, i, queue):
     src = (
         RenderedPage()
         .get_rendered_page(url)
@@ -410,7 +407,7 @@ try:
     progress.empty()
 
 
-def main():
+def run_application():
     """
     The main function that runs the web scraping application.
     """
