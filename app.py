@@ -1,3 +1,7 @@
+import os
+import re
+import time
+import tempfile
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
@@ -94,6 +98,7 @@ class RenderedPage:
             # Create a Beautiful Soup object of the fully rendered page
             soup = BeautifulSoup(content, "html5lib")
             return soup
+        full_html = self.driver.page_source
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
@@ -283,7 +288,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
 
         def fetch_content(url, data, i, local_path):
             src = (
-                RenderedPage()
+                RenderedPage(self.queue)
                 .get_rendered_page(url)
                 .renderContents(encoding="UTF-8", prettyPrint=True)
             )
@@ -291,7 +296,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
             # content = body.get_dom_attribute("outerHTML")
             data["resp_code"] = requests.get(url).status_code
             data["downloaded"] = i
-            data["remaining"] = 1 + len(queue)
+            data["remaining"] = 1 + len(self.queue)
             data["saving"] = local_path
             return content
 
@@ -363,7 +368,7 @@ def main():
         label_visibility="collapsed",
     )
 
-    COLUMNS[0].write("Saving is disabled on demo for obvious space saving reasons")
+    COLUMNS[0].write(f"Saving is disabled on demo for obvious space saving reasons")
     COLUMNS[0].expander("Expand Instructions Here").markdown(
         """
 
