@@ -72,7 +72,7 @@ def get_driver():
     response = requests.get(binary_url, stream=True)
     response.raise_for_status()
 
-    if not os.path.exists(binary_path)
+    if not os.path.exists(binary_path):
         with open(binary_path, 'wb') as file:
             for chunk in response.iter_content(chunk_size=8192):
                 file.write(chunk)
