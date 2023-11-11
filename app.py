@@ -95,8 +95,8 @@ class RenderedPage:
 
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(content, "html5lib")
+        full_html = self.driver.page_source
         return soup
-    full_html = self.driver.page_source
     # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
