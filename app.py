@@ -1,8 +1,8 @@
 import os
-import platform
 import re
-import subprocess
 import time
+import platform
+import subprocess
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
@@ -13,11 +13,7 @@ import requests
 import streamlit as st
 from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
-from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
 
 from statwords import StatusWordItem, Items
 
@@ -59,54 +55,22 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
                 yield t
 
 
-def chromecheck():
-    """
-    Check if Google Chrome is installed and install it if necessary.
-    """
-    if platform.system() == "Linux":
-        print("The code is running on Linux.")
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
-        # Check if Google Chrome is already installed
-        check_command = "/path/to/google-chrome-stable --version"
-        result = subprocess.run(
-            check_command, shell=True, capture_output=True, text=True
-        )
-
-        # Google Chrome is not installed?
-        if result.returncode != 0:
-
-            # Proceed with downloading and installing
-            download_url = "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
-            
-            # Download the package using curl
-            download_command = f"curl -o google-chrome-stable_current_amd64.deb {download_url}"
-            subprocess.run(download_command, shell=True, check=True)
-
-            # Install the downloaded package using dpkg in user-specific location
-            install_command = "dpkg -x google-chrome-stable_current_amd64.deb ~/install/"
-            subprocess.run(install_command, shell=True, check=True)
-
-            # Clean up the downloaded package
-            cleanup_command = "rm google-chrome-stable_current*"
-            subprocess.run(cleanup_command, shell=True)
-        else:
-            # Google Chrome is already installed
-            print("Chrome is already installed.")
-    else:
-        print("The code is not running on Linux.\n\nPlease install Chrome")
-
-
-
-if "CHECKED" not in st.session_state:
-    st.session_state["CHECKED"] = chromecheck()
-
+@st.experimental_singleton
+def get_driver(options):
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 class RenderedPage:
     def __init__(self):
         # Set up the headless browser
         chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Run the browser in headless mode
-        self.driver = webdriver.Chrome(options=chrome_options)
+        chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
+        chrome_options.add_argument('--disable-gpu')       
+        self.driver = get_driver(chrome_options)
 
     def get_rendered_page(self, url):
         # Load the webpage in the headless browser
@@ -114,12 +78,14 @@ class RenderedPage:
 
         # Wait for JavaScript to execute and render the page
         # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(3)
+        time.sleep(5)
         
         # Get the fully rendered HTML
         full_html = self.driver.page_source
+        
         # Close the browser
         self.driver.quit()
+        
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
