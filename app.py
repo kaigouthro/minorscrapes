@@ -185,7 +185,7 @@ async def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
                     if attr[0] == "href":
                         self.hyperlinks.append(attr[1])
 
-    def get_hyperlinks(url):
+    async def get_hyperlinks(url):
 
         """
         Retrieves all hyperlinks from a given URL.
