@@ -62,7 +62,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 
 @st.cache_resource
 def get_driver():
-    temp_dir = os.path.join('~/', 'tmp')
+    temp_dir = os.path.join('/home', os.getlogin(), '.local', 'bin')
     # Download the Firefox Portable edition to a temporary folder
     os.makedirs(temp_dir, exist_ok=True)
     binary_path = os.path.join(temp_dir, 'firefox')
@@ -75,7 +75,7 @@ def get_driver():
         with open(binary_path, 'wb') as file:
             for chunk in response.iter_content(chunk_size=8192):
                 file.write(chunk)
-        os.chmod(binary_path, stat.S_IRWXU)  # Set user read/write/execute permissions    # Set up the WebDriver
+        os.chmod(binary_path, 0o755)  # Set user read/write/execute permissions    # Set up the WebDriver
     firefox_options = Options()
     firefox_options.binary_location = binary_path
     firefox_options.add_argument('--headless')
