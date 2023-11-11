@@ -61,17 +61,17 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
+@st.cache_resource
+def get_driver():
+    # Set up the headless browser
+    chrome_options = Options()
+    chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
+    chrome_options.add_argument('--disable-gpu')    
+    return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
+
 class RenderedPage:
     def __init__(self):
-        self.driver = self.get_driver()
-    
-    @st.cache_resource
-    def get_driver(self):
-        # Set up the headless browser
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-        chrome_options.add_argument('--disable-gpu')    
-        return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
+        self.driver = get_driver()
 
     def get_rendered_page(self, url):
         # Load the webpage in the headless browser
