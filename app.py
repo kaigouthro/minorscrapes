@@ -1,4 +1,5 @@
-import os
+# This script scrapes web pages and converts them to markdown format for easy consumption by AI or for viewing.
+import os as operating_system
 import re
 import time
 import platform
@@ -61,7 +62,7 @@ from selenium.webdriver.firefox.service import Service
 from webdriver_manager.firefox import GeckoDriverManager
 
 @st.cache_resource
-def get_driver():
+def create_web_driver():
     temp_dir = os.path.join('/opt', 'tmp')
     # Download the Firefox Portable edition to a temporary folder
     os.makedirs(temp_dir, exist_ok=True)
@@ -88,7 +89,7 @@ class RenderedPage:
     def __init__(self):
         self.driver = get_driver()
 
-    def get_rendered_page(self, url):
+    def get_rendered_web_page(self, url):
                 
         # Load the webpage in the headless browser
         self.driver.get(url)
@@ -101,10 +102,67 @@ class RenderedPage:
         full_html = self.driver.page_source
         
         # # Close the browser
-        # self.driver.quit()
+        def update_status(data):
+            value0 = data["resp_code"]
+            value1 = data["downloaded"]
+            value2 = data["remaining"]
+            value3 = data["saving"]
+
+            if value0 != 200:
+                statsvals.items[0].response_code(value0)
+            else:
+                statsvals.items[1].set("finished", value1)
+                statsvals.items[2].set("pending", value2)
+                statsvals.items[3].set("saving", value3)
+
+            progress.progress(
+                max(
+                    i / (1 + i + len(queue)),
+                    max(0, i - len(queue)) / (1 + i + len(queue)),
+                ),
+                text=f":orange[{value3}]",
+            )
+
+        def fetch_web_page_content(url, data):
+
+        # Wait for JavaScript to execute and render the page
+        # You can use explicit waits to wait for specific elements to appear on the page
+        time.sleep(5)
         
-        # Create a Beautiful Soup object of the fully rendered page
-        soup = BeautifulSoup(full_html, "html5lib")
+        # Get the fully rendered HTML
+        full_html = self.driver.page_source
+        import os
+        import re as regular_expression
+        import time
+        import platform
+        import subprocess
+        from collections import deque
+        from html.parser import HTMLParser
+        from urllib.parse import urljoin, urlparse
+        
+        import bs4
+        import mdformat
+        import requests
+        import streamlit as st
+        from bs4 import BeautifulSoup
+        from markdownify import MarkdownConverter
+        from selenium.webdriver.common.by import By
+        
+        from statwords import StatusWordItem, Items
+        
+        
+        st.set_page_config("Minor Scrapes", "🔪", "wide")
+        STATE = st.session_state
+        
+        st.title("Minor Scrapes")
+        
+        NOTIFICATION = st.empty()
+        COLUMNS = st.columns([0.618, 0.01, 0.372])
+        LEFT_TABLE = COLUMNS[0].empty()
+        
+        
+        
+        def get_matching_tags(soup, tags_plus_atrtibutes):
         return soup
 
 
@@ -148,7 +206,7 @@ def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
 
 
-def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
+def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False):
     """
     Crawls a website and saves or displays the content.
 
@@ -177,7 +235,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
     stattable = LEFT_TABLE.empty()
 
-    class HyperlinkParser(HTMLParser):
+    class WebPageHyperlinkParser(HTMLParser):
         """
         A class that parses HTML and extracts hyperlinks.
         """
@@ -199,7 +257,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
                     if attr[0] == "href":
                         self.hyperlinks.append(attr[1])
 
-    def get_hyperlinks(url):
+    def extract_hyperlinks_from_web_page(url):
 
         """
         Retrieves all hyperlinks from a given URL.
@@ -218,7 +276,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
         except Exception:
             return []
 
-    def get_domain_hyperlinks(local_domain, url):
+    def extract_domain_specific_hyperlinks(local_domain, url):
         """
         Retrieves domain-specific hyperlinks from a given URL.
 
@@ -266,7 +324,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
         content = None
 
-        def update_status(data):
+        def update_scraping_status(data):
             value0 = data["resp_code"]
             value1 = data["downloaded"]
             value2 = data["remaining"]
@@ -310,15 +368,16 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             update_status(data)
             continue
 
-        base_filename = f"{f'{convert_to_safe_url(parent_path)}/' if parent_path else '/'}{convert_to_safe_url(path_tail)}"
-        soup = BeautifulSoup(content, "html5lib")
-        tag_items = list(get_matching_tags(soup, tags_to_save))
-        # remove duplicates starting from the last item towards the first..
-
-        md_output = None
-        md_display = ""
-        md_add = ""
-        expnd = st.expander(f":green[{base_filename}]") if not do_save else st.empty()
+        base_output_filename = f"{f'{convert_to_safe_url(parent_path)}/' if parent_path else '/'}{convert_to_safe_url(path_tail)}"
+        parsed_html_content = BeautifulSoup(content, "html5lib")
+        html_tag_items = list(get_matching_tags(parsed_html_content, tags_to_save))
+        markdown_output = None
+        markdown_display_content = ""
+        additional_markdown_content = ""
+        expandable_content = st.expander(f":green[{base_output_filename}]") if not do_save else st.empty()
+        item_index = 0
+        hyperlink = queue.pop()
+        scraping_progress = NOTIFICATION.progress(text="Crawling", value=1.0)
         for tag in tag_items:
             # tag = tag.text
             if re.search(
@@ -357,7 +416,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     progress.empty()
 
 
-def main():
+def main_scraping_process():
     """
     The main function that runs the web scraping application.
     """
