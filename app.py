@@ -61,7 +61,8 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
 from webdriver_manager.firefox import GeckoDriverManager
 
-@st.cache_resource
+
+
 def get_driver():
     # Set up the headless browser
     firefox_options = Options()    
@@ -75,6 +76,9 @@ class RenderedPage:
         self.driver = get_driver()
 
     def get_rendered_page(self, url):
+        
+        self.driver.start()
+        
         # Load the webpage in the headless browser
         self.driver.get(url)
 
