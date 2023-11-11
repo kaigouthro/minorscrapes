@@ -13,7 +13,6 @@ from markdownify import MarkdownConverter
 
 from statwords import StatusWordItem, Items
 
-
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 SESSION_STATE = st.session_state
 
@@ -23,7 +22,18 @@ NOTIFICATION = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
 
-
+queue = deque()
+stattable = None
+statsvals = None
+local_domain = None
+do_save = False
+local_path = None
+data = None
+i = 0
+progress = None
+seen = []
+home_url = None
+STATE = None
 
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
@@ -163,7 +173,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
     home_url = str(os.path.split(url)[0])
     if parts >= 2 and up_level:
         home_url = os.path.split(home_url)[0]
-    queue = deque([url])
+    queue.append(url)
     seen = []
     converted = []
 
@@ -330,21 +340,21 @@ while queue:
                 text=f":orange[{value3}]",
             )
 
-        def fetch_content(url, data):
-            src = (
-                RenderedPage()
-                .get_rendered_page(url)
-                .renderContents(encoding="UTF-8", prettyPrint=True)
-            )
-            content = src
-            # content = body.get_dom_attribute("outerHTML")
-            data["resp_code"] = requests.get(url).status_code
-            data["downloaded"] = i
-            data["remaining"] = 1 + len(queue)
-            data["saving"] = local_path
-            return content
+def fetch_content(url, data):
+    src = (
+        RenderedPage()
+        .get_rendered_page(url)
+        .renderContents(encoding="UTF-8", prettyPrint=True)
+    )
+    content = src
+    # content = body.get_dom_attribute("outerHTML")
+    data["resp_code"] = requests.get(url, timeout=5).status_code
+    data["downloaded"] = i
+    data["remaining"] = 1 + len(queue)
+    data["saving"] = local_path
+    return content
 
-        try:
+try:
             content = fetch_content(url, data)
             update_status(data)
 
