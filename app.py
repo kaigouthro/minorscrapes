@@ -55,6 +55,7 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
                 yield t
 
 
+import asyncio
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -68,32 +69,39 @@ def get_driver():
     chrome_options.add_argument('--disable-gpu')    
     return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
 
+
 class RenderedPage:
     """
     This class is responsible for rendering a webpage in a headless browser and returning a BeautifulSoup object of the fully rendered page. It uses Selenium WebDriver to load the webpage in a headless Chrome browser, waits for JavaScript to execute and render the page, retrieves the fully rendered HTML, and then creates a BeautifulSoup object of the fully rendered page.
     """
     def __init__(self):
-        self.driver = get_driver()
+        self.loop = asyncio.get_event_loop()
+        self.driver = self.loop.run_until_complete(self.create_driver())
 
-    def get_rendered_page(self, url):
+    async def create_driver(self):
+        # Set up the headless browser
+        chrome_options = Options()
+        chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
+        chrome_options.add_argument('--disable-gpu')    
+        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
+    async def get_rendered_page(self, url):
         # Load the webpage in the headless browser
-        self.driver.get(url)
+        await self.loop.run_in_executor(None, self.driver.get, url)
 
         # Wait for JavaScript to execute and render the page
-        # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(5)
+        await asyncio.sleep(5)
         
         # Get the fully rendered HTML
-        full_html = self.driver.page_source
+        await self.loop.run_in_executor(None, self.driver.page_source)
         
         # Close the browser
-        self.driver.quit()
-        
+        await self.loop.run_in_executor(None, self.driver.quit)
+
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
-
-
+        
 def convert_to_markdown(soup):
     """
     Converts the input text to Markdown format.
