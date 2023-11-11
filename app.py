@@ -319,7 +319,7 @@ while queue:
         update_status(data, i, queue, progress, statsvals)
         continue
 
-    def update_status(data):
+        def update_status(data):
         value0 = data["resp_code"]
         value1 = data["downloaded"]
         value2 = data["remaining"]
