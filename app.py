@@ -1,8 +1,8 @@
+from html.parser import HTMLParser
 import os
 import re
 import time
 from collections import deque
-from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 
 import mdformat
@@ -54,11 +54,6 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
             if not t.find_parents(tag):
                 yield t
 
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
 @st.experimental_singleton
 def get_driver(options):
@@ -272,7 +267,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
                 text=f":orange[{value3}]",
             )
 
-        def fetch_content(url, data, i, queue, local_path):
+        def fetch_content(url, data):
             src = (
                 RenderedPage()
                 .get_rendered_page(url)
@@ -314,7 +309,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
             content = src
             content = fetch_content(url, data, i, queue, local_path)
             update_status(data, i, queue)
-            data["resp_code"] = requests.get(url).status_code
+            data["resp_code"] = requests.get(url, timeout=5).status_code
             data["downloaded"] = i
             data["remaining"] = 1 + len(queue)
             data["saving"] = local_path
