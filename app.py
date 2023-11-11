@@ -65,8 +65,8 @@ def get_driver():
     # Set up the headless browser
     chrome_options = Options()
     chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-    chrome_options.add_argument('--disable-gpu')    
-    return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
+    chrome_options.add_argument('--disable-gpu')
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 class RenderedPage:
     def __init__(self):
@@ -79,17 +79,16 @@ class RenderedPage:
         # Wait for JavaScript to execute and render the page
         # You can use explicit waits to wait for specific elements to appear on the page
         time.sleep(5)
-        
+
         # Get the fully rendered HTML
         full_html = self.driver.page_source
-        
+
         # Close the browser
         self.driver.quit()
-        
+
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
-
 
 def convert_to_markdown(soup):
     """
