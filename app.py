@@ -1,8 +1,8 @@
 import os
-import re
-import time
 import platform
+import re
 import subprocess
+import time
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
@@ -15,8 +15,7 @@ from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
 from selenium.webdriver.common.by import By
 
-from statwords import StatusWordItem, Items
-
+from statwords import Items, StatusWordItem
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
@@ -56,17 +55,21 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
 
 
 import asyncio
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+
 
 @st.cache_resource
 def get_driver():
     # Set up the headless browser
     chrome_options = Options()
     chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    return webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()), options=chrome_options
+    )
 
 
 class RenderedPage:
@@ -77,27 +80,32 @@ class RenderedPage:
     async def create_driver(self):
         # Set up the headless browser
         chrome_options = Options()
-        chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-        chrome_options.add_argument('--disable-gpu')    
-        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        chrome_options.add_argument(
+            "--headless=new"
+        )  # Run the browser in headless mode
+        chrome_options.add_argument("--disable-gpu")
+        return webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()), options=chrome_options
+        )
 
-    async def get_rendered_page(self, url): 
+    async def get_rendered_page(self, url):
         # Load the webpage in the headless browser
         await self.loop.run_in_executor(None, self.driver.get, url)
 
         # Wait for JavaScript to execute and render the page
         await asyncio.sleep(5)
-        
+
         # Get the fully rendered HTML
         await self.loop.run_in_executor(None, self.driver.page_source)
-        
+
         # Close the browser
         await self.loop.run_in_executor(None, self.driver.quit)
 
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
-        
+
+
 def convert_to_markdown(soup):
     """
     Converts the input text to Markdown format.
@@ -190,7 +198,6 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
                         self.hyperlinks.append(attr[1])
 
     def get_hyperlinks(url):
-
         """
         Retrieves all hyperlinks from a given URL.
 
@@ -496,7 +503,6 @@ def main():
 
     # Iterate over tags and properties
     for tag, properties in st.session_state.tags.items():
-
         for property_dict in properties:
             # Create dictionary for each tag and properties
             data = {"tag": tag, "attrs": property_dict}
