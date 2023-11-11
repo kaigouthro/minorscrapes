@@ -62,7 +62,15 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 @st.experimental_singleton
 def get_driver(options):
-    # Set up the headless browser
+    """
+    Sets up a headless browser with specific options and returns a WebDriver instance.
+    
+    Args:
+        options (Options): The options for the WebDriver.
+        
+    Returns:
+        WebDriver: The WebDriver instance.
+    """
     options = Options()
     options.add_argument("--headless=new")  # Run the browser in headless mode
     options.add_argument("--disable-gpu")       
@@ -73,21 +81,21 @@ class RenderedPage:
         self.driver = get_driver()
 
      get_rendered_page(self, url):
-        # Load the webpage in the headless browser
+        """
+        Loads a webpage in the headless browser, waits for JavaScript to execute and render the page,
+        gets the fully rendered HTML, closes the browser, and returns a BeautifulSoup object of the fully rendered page.
+        
+        Args:
+            url (str): The URL of the webpage to load.
+            
+        Returns:
+            BeautifulSoup: The BeautifulSoup object of the fully rendered page.
+        """
         self.driver.get(url)
-
-        # Wait for JavaScript to execute and render the page
-        # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(5)
-        
-        # Get the fully rendered HTML
-        full_html = self.driver.page_source
-        
-        # Close the browser
-        self.driver.quit()
-        
-        # Create a Beautiful Soup object of the fully rendered page
-        soup = BeautifulSoup(full_html, "html5lib")
+        time.sleep(5)  # Wait for JavaScript to execute and render the page
+        full_html = self.driver.page_source  # Get the fully rendered HTML
+        self.driver.quit()  # Close the browser
+        soup = BeautifulSoup(full_html, "html5lib")  # Create a BeautifulSoup object of the fully rendered page
         return soup
 
 
