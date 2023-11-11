@@ -1,17 +1,19 @@
 import os
 import re
 import asyncio
+import time
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 
-import bs4
 import mdformat
 import requests
 import streamlit as st
-from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
-from selenium.webdriver.common.by import By
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 from statwords import StatusWordItem, Items
 
@@ -122,7 +124,7 @@ def convert_to_safe_url(text):
     """
     subst = "_"
     regex = r"[^a-zA-Z0-9-_]|\:"
-    return re.sub(regex, subst, text, 0, re.DOTALL)
+    return re.sub(regex, subst, text, count=0, flags=re.DOTALL)
 
 
 def add_https(url):
@@ -151,6 +153,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
     queue = deque([url])
     seen = []
     converted = []
+    i = 0
 
     if not os.path.exists("processed"):
             src = (
@@ -251,7 +254,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
             os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
         content = None
 
-        def update_status(data, i):
+        def update_status(data, i, local_path):
             value0 = data["resp_code"]
             value1 = data["downloaded"]
             value2 = data["remaining"]
@@ -269,7 +272,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
                     i / (1 + i + len(queue)),
                     max(0, i - len(queue)) / (1 + i + len(queue)),
                 ),
-                text=f":orange[{value3}]",
+                text=f":orange[{local_path}]",
             )
 
         def fetch_content(url, data):
