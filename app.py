@@ -60,15 +60,28 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
 from webdriver_manager.firefox import GeckoDriverManager
 
-
-
+@st.cache_resource
 def get_driver():
-    # Set up the headless browser
-    firefox_options = Options()    
+    # Download the Firefox Portable edition to a temporary folder
+    temp_dir = tempfile.mkdtemp()
+    binary_path = os.path.join(temp_dir, 'firefox')
+    binary_url = 'https://download.mozilla.org/?product=firefox-portable-latest-ssl&os=win64&lang=en-US'  # Replace with the URL of the Firefox Portable edition
+    
+    response = requests.get(binary_url, stream=True)
+    response.raise_for_status()
+    
+    with open(binary_path, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=8192):
+            file.write(chunk)
+
+    # Set up the WebDriver
+    firefox_options = Options()
+    firefox_options.binary_location = binary_path
     firefox_options.headless = True  # Enable headless mode
     firefox_options.add_argument('--disable-gpu')
-    return webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=firefox_options)
 
+    return webdriver.Firefox(options=firefox_options)
+    
 
 class RenderedPage:
     def __init__(self):
