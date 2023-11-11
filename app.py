@@ -1,22 +1,19 @@
 import os
 import re
 import time
-import platform
-import subprocess
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 
-import bs4
 import mdformat
 import requests
 import streamlit as st
 from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
-from selenium.webdriver.common.by import By
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 from statwords import StatusWordItem, Items
 
@@ -134,7 +131,9 @@ def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
 
 
-def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
+def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
+    if tags_to_save is None:
+        tags_to_save = []
     """
     Crawls a website and saves or displays the content.
 
@@ -252,7 +251,40 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
         content = None
 
-        def update_status(data):
+        def update_status(data, i, queue):
+            value0 = data["resp_code"]
+            value1 = data["downloaded"]
+            value2 = data["remaining"]
+            value3 = data["saving"]
+
+            if value0 != 200:
+                statsvals.items[0].response_code(value0)
+            else:
+                statsvals.items[1].set("finished", value1)
+                statsvals.items[2].set("pending", value2)
+                statsvals.items[3].set("saving", value3)
+
+            progress.progress(
+                max(
+                    i / (1 + i + len(queue)),
+                    max(0, i - len(queue)) / (1 + i + len(queue)),
+                ),
+                text=f":orange[{value3}]",
+            )
+
+        def fetch_content(url, data, i, queue, local_path):
+            src = (
+                RenderedPage()
+                .get_rendered_page(url)
+                .renderContents(encoding="UTF-8", prettyPrint=True)
+            )
+            content = src
+            # content = body.get_dom_attribute("outerHTML")
+            data["resp_code"] = requests.get(url, timeout=5).status_code
+            data["downloaded"] = i
+            data["remaining"] = 1 + len(queue)
+            data["saving"] = local_path
+            return content
             value0 = data["resp_code"]
             value1 = data["downloaded"]
             value2 = data["remaining"]
@@ -280,7 +312,8 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
                 .renderContents(encoding="UTF-8", prettyPrint=True)
             )
             content = src
-            # content = body.get_dom_attribute("outerHTML")
+            content = fetch_content(url, data, i, queue, local_path)
+            update_status(data, i, queue)
             data["resp_code"] = requests.get(url).status_code
             data["downloaded"] = i
             data["remaining"] = 1 + len(queue)
@@ -388,7 +421,7 @@ def main():
         parsed_folders = os.path.split(urlparse(parsed_folders).path)[0]
 
     COLUMNS[0].markdown(
-        f"####  :blue[.../markdown/{urlparse(url).netloc}{parsed_folders}]"
+        "####  :blue[.../markdown/{urlparse(url).netloc}{parsed_folders}]"
     )
     do_save = COLUMNS[0].checkbox(
         f"Hide Display and download to drive?",
