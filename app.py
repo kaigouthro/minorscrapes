@@ -1,8 +1,8 @@
 import os
-import re
-import time
 import platform
+import re
 import subprocess
+import time
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
 from selenium.webdriver.common.by import By
 
-from statwords import StatusWordItem, Items
+from statwords import Items, StatusWordItem
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
@@ -25,6 +25,7 @@ st.title("Minor Scrapes")
 NOTIFICATION = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
+
 
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
@@ -51,22 +52,24 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
             if not t.find_parents(tag):
                 yield t
 
+
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
 from webdriver_manager.firefox import GeckoDriverManager
 
+
 @st.cache_resource
 def get_driver():
     # Download the Firefox Portable edition to a temporary folder
     temp_dir = tempfile.mkdtemp()
-    binary_path = os.path.join(temp_dir, 'firefox')
-    binary_url = 'https://download.mozilla.org/?product=firefox-portable-latest-ssl&os=win64&lang=en-US'  # Replace with the URL of the Firefox Portable edition
-    
+    binary_path = os.path.join(temp_dir, "firefox")
+    binary_url = "https://download.mozilla.org/?product=firefox-portable-latest-ssl&os=win64&lang=en-US"  # Replace with the URL of the Firefox Portable edition
+
     response = requests.get(binary_url, stream=True)
     response.raise_for_status()
-    
-    with open(binary_path, 'wb') as file:
+
+    with open(binary_path, "wb") as file:
         for chunk in response.iter_content(chunk_size=8192):
             file.write(chunk)
 
@@ -74,30 +77,29 @@ def get_driver():
     firefox_options = Options()
     firefox_options.binary_location = binary_path
     firefox_options.headless = True  # Enable headless mode
-    firefox_options.add_argument('--disable-gpu')
+    firefox_options.add_argument("--disable-gpu")
 
     return webdriver.Firefox(options=firefox_options)
-    
+
 
 class RenderedPage:
     def __init__(self):
         self.driver = get_driver()
 
     def get_rendered_page(self, url):
-                
         # Load the webpage in the headless browser
         self.driver.get(url)
 
         # Wait for JavaScript to execute and render the page
         # You can use explicit waits to wait for specific elements to appear on the page
         time.sleep(5)
-        
+
         # Get the fully rendered HTML
         full_html = self.driver.page_source
-        
+
         # # Close the browser
         # self.driver.quit()
-        
+
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
@@ -195,7 +197,6 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
                         self.hyperlinks.append(attr[1])
 
     def get_hyperlinks(url):
-
         """
         Retrieves all hyperlinks from a given URL.
 
@@ -501,7 +502,6 @@ def main():
 
     # Iterate over tags and properties
     for tag, properties in st.session_state.tags.items():
-
         for property_dict in properties:
             # Create dictionary for each tag and properties
             data = {"tag": tag, "attrs": property_dict}
