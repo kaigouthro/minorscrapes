@@ -1,19 +1,15 @@
 import os
 import re
 import time
-import platform
-import subprocess
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 
-import bs4
 import mdformat
 import requests
 import streamlit as st
 from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
-from selenium.webdriver.common.by import By
 
 from statwords import StatusWordItem, Items
 
@@ -68,7 +64,7 @@ def get_driver():
     binary_path = os.path.join(temp_dir, 'firefox')
     binary_url = 'https://download.mozilla.org/?product=firefox-portable-latest-ssl&os=win64&lang=en-US'  # Replace with the URL of the Firefox Portable edition
     
-    response = requests.get(binary_url, stream=True)
+    response = requests.get(binary_url, stream=True, timeout=5)
     response.raise_for_status()
     
     with open(binary_path, 'wb') as file:
@@ -148,7 +144,7 @@ def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
 
 
-def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
+def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
     """
     Crawls a website and saves or displays the content.
 
@@ -157,6 +153,9 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
         tags_to_save (list): A list of HTML tags to save.
         do_save (bool): Whether to save the content to a folder.
     """
+    if tags_to_save is None:
+        tags_to_save = []
+
     url = add_https(url)
     local_domain = urlparse(url).netloc
     local_path = urlparse(url).path
@@ -252,19 +251,63 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     statsvals.add_item(StatusWordItem("pending"))
     statsvals.add_item(StatusWordItem("saving"))
 
-    while queue:
-        stattable.table([s.display for s in statsvals.items])
-        url = queue.pop()
-        if url in converted:
-            continue
-        local_path = os.path.join(local_domain, urlparse(url).path)
-        parent_path, path_tail = (
-            os.path.split(local_path) if "/" in local_path else (None, local_path)
-        )
+def update_status(data, i, queue, progress, statsvals):
+    value0 = data["resp_code"]
+    value1 = data["downloaded"]
+    value2 = data["remaining"]
+    value3 = data["saving"]
 
-        if do_save:
-            os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
-        content = None
+    if value0 != 200:
+        statsvals.items[0].response_code(value0)
+    else:
+        statsvals.items[1].set("finished", value1)
+        statsvals.items[2].set("pending", value2)
+        statsvals.items[3].set("saving", value3)
+
+    progress.progress(
+        max(
+            i / (1 + i + len(queue)),
+            max(0, i - len(queue)) / (1 + i + len(queue)),
+        ),
+        text=f":orange[{value3}]",
+    )
+
+def fetch_content(url, data, i, queue):
+    src = (
+        RenderedPage()
+        .get_rendered_page(url)
+        .renderContents(encoding="UTF-8", prettyPrint=True)
+    )
+    content = src
+    # content = body.get_dom_attribute("outerHTML")
+    data["resp_code"] = requests.get(url, timeout=5).status_code
+    data["downloaded"] = i
+    data["remaining"] = 1 + len(queue)
+    data["saving"] = local_path
+    return content
+
+while queue:
+    stattable.table([s.display for s in statsvals.items])
+    url = queue.pop()
+    if url in converted:
+        continue
+    local_path = os.path.join(local_domain, urlparse(url).path)
+    parent_path, path_tail = (
+        os.path.split(local_path) if "/" in local_path else (None, local_path)
+    )
+
+    if do_save:
+        os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
+    content = None
+
+    try:
+        content = fetch_content(url, data, i, queue)
+        update_status(data, i, queue, progress, statsvals)
+
+    except Exception as e:
+        data["saving"] = f"{url} - {e}"
+        update_status(data, i, queue, progress, statsvals)
+        continue
 
         def update_status(data):
             value0 = data["resp_code"]
@@ -370,9 +413,7 @@ def main():
     )
 
     COLUMNS[0].write(
-        """
-    :red[ Saving is disabled on demo for obvious space saving reasons ]
-        """
+        "Saving is disabled on demo for obvious space saving reasons"
     )
     COLUMNS[0].expander("Expand Instructions Here").markdown(
         """
