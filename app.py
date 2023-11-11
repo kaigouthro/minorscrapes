@@ -70,10 +70,11 @@ options = Options()
 options.add_argument('--disable-gpu')
 options.add_argument('--headless')
 
+driver = get_driver()
 
 class RenderedPage:
     def __init__(self):
-        self.driver = get_driver()
+        self.driver = driver
 
     def get_rendered_page(self, url):
                 
@@ -82,7 +83,7 @@ class RenderedPage:
 
         # Wait for JavaScript to execute and render the page
         # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(5)
+        time.sleep(2)
         
         # Get the fully rendered HTML
         full_html = self.driver.page_source
