@@ -96,9 +96,10 @@ class RenderedPage:
             data["downloaded"] = i
             data["remaining"] = 1 + len(queue)
             data["saving"] = local_path
-            return content
 
-        try:
+            # Create a Beautiful Soup object of the fully rendered page
+            soup = BeautifulSoup(content, "html5lib")
+            return soup
             # Create a Beautiful Soup object of the fully rendered page
             soup = BeautifulSoup(full_html, "html5lib")
             return soup
