@@ -11,6 +11,8 @@ import streamlit as st
 from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
 from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import mdformat
 
@@ -132,7 +134,7 @@ def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
 
 
-async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
+async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i=0, local_path=""):
     if tags_to_save is None:
         tags_to_save = []
     """
@@ -156,8 +158,6 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
 
     if not os.path.exists("processed"):
         os.mkdir("processed")
-
-    i = 0
 
     progress = NOTIFICATION.progress(text="Crawling", value=1.0)
     data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
@@ -276,7 +276,7 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
                 text=f":orange[{value3}]",
             )
 
-        def fetch_content(url, data):
+        def fetch_content(url, data, i, local_path):
             src = await RenderedPage().get_rendered_page(url).renderContents(encoding="UTF-8", prettyPrint=True)
             content = src
             # content = body.get_dom_attribute("outerHTML")
@@ -287,7 +287,7 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
             return content
 
         try:
-            content = await fetch_content(url, data)
+            content = await fetch_content(url, data, i, local_path)
             update_status(data)
 
         except Exception as e:
@@ -485,7 +485,7 @@ async def main():
     # Display the dataframe
     COLUMNS[0].dataframe(df_data, use_container_width=True, height=400)
 
-    COLUMNS[2].slider("Not yet implemented...", 1, 5, 2, 1, key="colsplit")
+    COLUMNS[2].slider("Not yet implemented", 1, 5, 2, 1, key="colsplit")
 
     tag_requests = [{"tag": t, "attrs": None} for t in st.session_state.tags.keys()]
 
