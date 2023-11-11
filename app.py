@@ -41,6 +41,16 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
     Yields:
         BeautifulSoup.Tag: tags that match the given parameters
     """
+    def fetch_content(url, data, i, local_path):
+        src = await RenderedPage().get_rendered_page(url).renderContents(encoding="UTF-8", prettyPrint=True)
+        content = src
+        # content = body.get_dom_attribute("outerHTML")
+        data["resp_code"] = requests.get(url, timeout=5).status_code
+        data["downloaded"] = i
+        data["remaining"] = 1 + len(queue)
+        data["saving"] = local_path
+        return content
+    
     for tag_attr in tags_plus_atrtibutes:
         tag = tag_attr["tag"]
         # get all tags that match the tag
@@ -48,15 +58,6 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
         if tag_attr["attrs"] is not None:
             attrs = tag_attr["attrs"]
             for attr in attrs:
-        def fetch_content(url, data, i, local_path):
-            src = await RenderedPage().get_rendered_page(url).renderContents(encoding="UTF-8", prettyPrint=True)
-            content = src
-            # content = body.get_dom_attribute("outerHTML")
-            data["resp_code"] = requests.get(url, timeout=5).status_code
-            data["downloaded"] = i
-            data["remaining"] = 1 + len(queue)
-            data["saving"] = local_path
-            return content
                 tags = [t for t in tags if t.has_attr(attr) or t.has_attr(attr + "s")]
         for t in tags:
             if not t.find_parents(tag):
@@ -249,6 +250,27 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i
 
     i = 0
     local_path = ""
+    def update_status(data, i):
+        value0 = data["resp_code"]
+        value1 = data["downloaded"]
+        value2 = data["remaining"]
+        value3 = data["saving"]
+    
+        if value0 != 200:
+            statsvals.items[0].response_code(value0)
+        else:
+            statsvals.items[1].set("finished", value1)
+            statsvals.items[2].set("pending", value2)
+            statsvals.items[3].set("saving", value3)
+    
+        progress.progress(
+            max(
+                i / (1 + i + len(queue)),
+                max(0, i - len(queue)) / (1 + i + len(queue)),
+            ),
+            text=f":orange[{value3}]",
+        )
+    
     while queue:
         stattable.table([s.display for s in statsvals.items])
         url = queue.pop()
@@ -258,13 +280,11 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i
         parent_path, path_tail = (
             os.path.split(local_path) if "/" in local_path else (None, local_path)
         )
-
+    
         if do_save:
             os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
         content = None
         i += 1
-
-        def update_status(data, i):
             value0 = data["resp_code"]
             value1 = data["downloaded"]
             value2 = data["remaining"]
