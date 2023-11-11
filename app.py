@@ -88,9 +88,7 @@ class RenderedPage:
         self.driver = get_driver()
 
     def get_rendered_page(self, url):
-        
-        self.driver.start()
-        
+                
         # Load the webpage in the headless browser
         self.driver.get(url)
 
@@ -101,8 +99,8 @@ class RenderedPage:
         # Get the fully rendered HTML
         full_html = self.driver.page_source
         
-        # Close the browser
-        self.driver.quit()
+        # # Close the browser
+        # self.driver.quit()
         
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
