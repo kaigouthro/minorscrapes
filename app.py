@@ -55,33 +55,20 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
             if not t.find_parents(tag):
                 yield t
 
+
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.service import Service
-from webdriver_manager.firefox import GeckoDriverManager
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
-@st.cache_resource
+@st.experimental_singleton
 def get_driver():
-    temp_dir = os.path.join('home', os.getlogin(), '.local', 'bin')
-    # Download the Firefox Portable edition to a temporary folder
-    os.makedirs(temp_dir, exist_ok=True)
-    binary_path = os.path.join(temp_dir, 'firefox')
-    binary_url = 'https://download.mozilla.org/?product=firefox-latest-ssl&os=linux&lang=en-US'  # Replace with the URL of the Firefox Portable edition
-    
-    response = requests.get(binary_url, stream=True)
-    response.raise_for_status()
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-    with open(binary_path, 'wb') as file:
-        for chunk in response.iter_content(chunk_size=8192):
-            file.write(chunk)
-    os.chmod(binary_path, 0o755)  # Set user read/write/execute permissions    # Set up the WebDriver
-    firefox_options = Options()
-    firefox_options.binary_location = binary_path
-    firefox_options.add_argument('--headless')
-    firefox_options.add_argument('--disable-gpu')
+options = Options()
+options.add_argument('--disable-gpu')
+options.add_argument('--headless')
 
-    return webdriver.Firefox(options=firefox_options)
-    
 
 class RenderedPage:
     def __init__(self):
