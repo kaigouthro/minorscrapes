@@ -68,8 +68,8 @@ class RenderedPage:
     def __init__(self):
         # Set up the headless browser
         chrome_options = Options()
-        chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-        chrome_options.add_argument('--disable-gpu')       
+        chrome_options.add_argument("--headless")  # Run the browser in headless mode
+        chrome_options.add_argument('--disable-gpu')
         self.driver = get_driver(chrome_options)
 
     def get_rendered_page(self, url):
