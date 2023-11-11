@@ -64,9 +64,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 @st.cache_resource
 def get_driver():
     # Set up the headless browser
-    chrome_options = Options()
-    chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-    return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
+    headless_chrome_options = Options()
+    headless_chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
+    return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=headless_chrome_options)
 
 
 class RenderedPage:
@@ -76,10 +76,10 @@ class RenderedPage:
 
     async def create_driver(self):
         # Set up the headless browser
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-        chrome_options.add_argument('--disable-gpu')    
-        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        headless_chrome_options = Options()
+        headless_chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
+        headless_chrome_options.add_argument('--disable-gpu')    
+        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=headless_chrome_options)
 
     async def get_rendered_page(self, url):
         # Load the webpage in the headless browser
