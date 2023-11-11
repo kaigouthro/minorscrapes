@@ -81,7 +81,7 @@ class RenderedPage:
         full_html = None
         
         # Get the fully rendered HTML
-        while full_html == None           
+        while full_html == None:           
             # Wait for JavaScript to execute and render the page
             await asyncio.sleep(2)
             full_html = self.driver.page_source
