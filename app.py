@@ -257,7 +257,7 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i
     i = 0
     local_path = ""
     def update_status(data, i):
-        value0 = data["resp_code"]
+    value0 = data["resp_code"]
         value1 = data["downloaded"]
         value2 = data["remaining"]
         value3 = data["saving"]
