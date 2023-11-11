@@ -10,6 +10,7 @@ import requests
 import streamlit as st
 from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
+from selenium import webdriver
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -127,7 +128,7 @@ def convert_to_safe_url(text):
     """
     subst = "_"
     regex = r"[^a-zA-Z0-9-_]|\:"
-    return re.sub(regex, subst, text, 0, re.DOTALL)
+    return re.sub(regex, subst, text, count=0, flags=re.DOTALL)
 
 
 def add_https(url):
@@ -276,7 +277,8 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i
                 text=f":orange[{value3}]",
             )
 
-        def fetch_content(url, data, i, local_path):
+        nonlocal i
+        def fetch_content(url, data, local_path):
             src = await RenderedPage().get_rendered_page(url).renderContents(encoding="UTF-8", prettyPrint=True)
             content = src
             # content = body.get_dom_attribute("outerHTML")
@@ -336,6 +338,7 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i
                     i / (1 + i + len(queue)),
                     max(0, i - len(queue)) / (1 + i + len(queue)),
                 ),
+                value3 = data["saving"]
                 text=f":orange[{value3 if value3 else ''}]",
             )
     stattable.empty()
@@ -469,7 +472,7 @@ async def main():
 
     # Add new tag instance
     if COLUMNS[2].button(
-        f"""Add :blue[{html_tag}] :red[{attr_name}]=":green[{val}]" """,
+        f"Add :blue[{html_tag}] :red[{attr_name}]=':green[{val}]' ",
         use_container_width=True,
     ):
         st.session_state.tags[html_tag].append({attr_name: val})
