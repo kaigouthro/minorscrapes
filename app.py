@@ -129,7 +129,7 @@ def convert_to_safe_url(text):
             else:
                 statsvals.items[1].set("finished", value1)
                 statsvals.items[2].set("pending", value2)
-                statsvals.items[3].set("saving", value3)
+        statsvals.items[3].set("saving", value3)
 
         progress.progress(
             max(
