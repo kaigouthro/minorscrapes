@@ -129,7 +129,7 @@ if value0 != 200:
 else:
     statsvals.items[1].set("finished", value1)
     statsvals.items[2].set("pending", value2)
-        statsvals.items[3].set("saving", value3)
+    statsvals.items[3].set("saving", value3)
 
         progress.progress(
             max(
