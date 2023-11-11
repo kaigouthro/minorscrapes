@@ -77,10 +77,6 @@ class RenderedPage:
         
         # Get the fully rendered HTML
         full_html = self.driver.page_source
-        
-        # Close the browser
-        self.driver.quit()
-        
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
@@ -125,6 +121,40 @@ def convert_to_safe_url(text):
 def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
 
+
+def update_status(data, i, queue):
+    value0 = data["resp_code"]
+    value1 = data["downloaded"]
+    value2 = data["remaining"]
+    value3 = data["saving"]
+
+    if value0 != 200:
+        statsvals.items[0].response_code(value0)
+    else:
+        statsvals.items[1].set("finished", value1)
+        statsvals.items[2].set("pending", value2)
+        statsvals.items[3].set("saving", value3)
+
+    progress.progress(
+        max(
+            i / (1 + i + len(queue)),
+            max(0, i - len(queue)) / (1 + i + len(queue)),
+        ),
+        text=f":orange[{value3}]",
+    )
+
+def fetch_content(url, data, i, queue, local_path):
+    src = (
+        RenderedPage()
+        .get_rendered_page(url)
+        .renderContents(encoding="UTF-8", prettyPrint=True)
+    )
+    content = src
+    data["resp_code"] = requests.get(url, timeout=5).status_code
+    data["downloaded"] = i
+    data["remaining"] = 1 + len(queue)
+    data["saving"] = local_path
+    return content
 
 def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
     if tags_to_save is None:
@@ -246,26 +276,6 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
             os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
         content = None
 
-        def update_status(data, i, queue):
-            value0 = data["resp_code"]
-            value1 = data["downloaded"]
-            value2 = data["remaining"]
-            value3 = data["saving"]
-
-            if value0 != 200:
-                statsvals.items[0].response_code(value0)
-            else:
-                statsvals.items[1].set("finished", value1)
-                statsvals.items[2].set("pending", value2)
-                statsvals.items[3].set("saving", value3)
-
-            progress.progress(
-                max(
-                    i / (1 + i + len(queue)),
-                    max(0, i - len(queue)) / (1 + i + len(queue)),
-                ),
-                text=f":orange[{value3}]",
-            )
 
         def fetch_content(url, data):
             src = (
@@ -298,15 +308,6 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
                     max(0, i - len(queue)) / (1 + i + len(queue)),
                 ),
                 text=f":orange[{value3}]",
-            )
-
-        def fetch_content(url, data):
-            src = (
-                RenderedPage()
-                .get_rendered_page(url)
-                .renderContents(encoding="UTF-8", prettyPrint=True)
-            )
-            content = src
             content = fetch_content(url, data, i, queue, local_path)
             update_status(data, i, queue)
             data["resp_code"] = requests.get(url, timeout=5).status_code
