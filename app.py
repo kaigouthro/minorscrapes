@@ -319,26 +319,26 @@ while queue:
         update_status(data, i, queue, progress, statsvals)
         continue
 
-        def update_status(data):
-            value0 = data["resp_code"]
-            value1 = data["downloaded"]
-            value2 = data["remaining"]
-            value3 = data["saving"]
+    def update_status(data):
+        value0 = data["resp_code"]
+        value1 = data["downloaded"]
+        value2 = data["remaining"]
+        value3 = data["saving"]
 
-            if value0 != 200:
-                statsvals.items[0].response_code(value0)
-            else:
-                statsvals.items[1].set("finished", value1)
-                statsvals.items[2].set("pending", value2)
-                statsvals.items[3].set("saving", value3)
+        if value0 != 200:
+            statsvals.items[0].response_code(value0)
+        else:
+            statsvals.items[1].set("finished", value1)
+            statsvals.items[2].set("pending", value2)
+            statsvals.items[3].set("saving", value3)
 
-            progress.progress(
-                max(
-                    i / (1 + i + len(queue)),
-                    max(0, i - len(queue)) / (1 + i + len(queue)),
-                ),
-                text=f":orange[{value3}]",
-            )
+        progress.progress(
+            max(
+                i / (1 + i + len(queue)),
+                max(0, i - len(queue)) / (1 + i + len(queue)),
+            ),
+            text=f":orange[{value3}]",
+        )
 
 def fetch_content(url, data):
     src = (
