@@ -1,4 +1,3 @@
-
 import asyncio
 import os
 import re
@@ -11,7 +10,9 @@ import requests
 import streamlit as st
 from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
-from selenium.webdriver.common.by import By
+from selenium.webdriver import Chrome, ChromeOptions
+from webdriver_manager.chrome import ChromeDriverManager
+import mdformat
 
 from statwords import StatusWordItem, Items
 
@@ -131,7 +132,9 @@ def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
 
 
-async def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
+async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
+    if tags_to_save is None:
+        tags_to_save = []
     """
     Crawls a website and saves or displays the content.
 
@@ -235,6 +238,8 @@ async def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     statsvals.add_item(StatusWordItem("pending"))
     statsvals.add_item(StatusWordItem("saving"))
 
+    i = 0
+    local_path = ""
     while queue:
         stattable.table([s.display for s in statsvals.items])
         url = queue.pop()
@@ -248,6 +253,7 @@ async def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
         if do_save:
             os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
         content = None
+        i += 1
 
         def update_status(data):
             value0 = data["resp_code"]
@@ -274,7 +280,7 @@ async def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             src = await RenderedPage().get_rendered_page(url).renderContents(encoding="UTF-8", prettyPrint=True)
             content = src
             # content = body.get_dom_attribute("outerHTML")
-            data["resp_code"] = requests.get(url).status_code
+            data["resp_code"] = requests.get(url, timeout=5).status_code
             data["downloaded"] = i
             data["remaining"] = 1 + len(queue)
             data["saving"] = local_path
@@ -325,11 +331,13 @@ async def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             ):
                 continue
             queue.append(link)
-            seen.append(link)
-
-        converted.append(url)
-
-    time.sleep(2)
+            progress.progress(
+                max(
+                    i / (1 + i + len(queue)),
+                    max(0, i - len(queue)) / (1 + i + len(queue)),
+                ),
+                text=f":orange[{value3 if value3 else ''}]",
+            )
     stattable.empty()
     progress.empty()
 
