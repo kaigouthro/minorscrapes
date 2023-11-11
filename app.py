@@ -1,7 +1,3 @@
-import os
-import re
-import time
-import tempfile
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
@@ -14,6 +10,8 @@ from markdownify import MarkdownConverter
 
 from statwords import StatusWordItem, Items
 
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
@@ -23,8 +21,6 @@ st.title("Minor Scrapes")
 NOTIFICATION = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
-
-
 
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
@@ -77,16 +73,14 @@ def get_driver():
     firefox_options.headless = True  # Enable headless mode
     firefox_options.add_argument('--disable-gpu')
 
-    return webdriver.Firefox(options=firefox_options)
-    
-
 class RenderedPage:
-    def __init__(self):
+    def __init__(self, queue):
         self.driver = get_driver()
+        self.queue = queue
 
         def fetch_content(url, data, i, local_path):
             src = (
-                RenderedPage()
+                RenderedPage(self.queue)
                 .get_rendered_page(url)
                 .renderContents(encoding="UTF-8", prettyPrint=True)
             )
@@ -94,14 +88,11 @@ class RenderedPage:
             # content = body.get_dom_attribute("outerHTML")
             data["resp_code"] = requests.get(url, timeout=5).status_code
             data["downloaded"] = i
-            data["remaining"] = 1 + len(queue)
+            data["remaining"] = 1 + len(self.queue)
             data["saving"] = local_path
 
             # Create a Beautiful Soup object of the fully rendered page
             soup = BeautifulSoup(content, "html5lib")
-            return soup
-            # Create a Beautiful Soup object of the fully rendered page
-            soup = BeautifulSoup(full_html, "html5lib")
             return soup
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
@@ -141,7 +132,7 @@ def convert_to_safe_url(text):
     """
     subst = "_"
     regex = r"[^a-zA-Z0-9-_]|\:"
-    return re.sub(regex, subst, text, 0, re.DOTALL)
+    return re.sub(regex, subst, text, count=0, flags=re.DOTALL)
 
 
 def add_https(url):
@@ -372,11 +363,7 @@ def main():
         label_visibility="collapsed",
     )
 
-    COLUMNS[0].write(
-        """
-    :red[ Saving is disabled on demo for obvious space saving reasons ]
-        """
-    )
+    COLUMNS[0].write("Saving is disabled on demo for obvious space saving reasons")
     COLUMNS[0].expander("Expand Instructions Here").markdown(
         """
 
