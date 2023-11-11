@@ -1,3 +1,4 @@
+import asyncio
 import os
 import re
 import time
@@ -55,7 +56,6 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
                 yield t
 
 
-import asyncio
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
