@@ -42,9 +42,9 @@ class StatusWordItem:
             "waiting"      : {"title": "Waiting", "icon": "⌛️"},
         }
         self.display = {"status": "", "value": ""}
-        self.set(word or "", value)
+        self.set_status_and_value(word or "", value)
 
-    def set(self, word: str, value=None):
+    def set_status_and_value(self, word: str, value=None):
         """
         outtputto display: an icon and status word, as well as the state if exists
         """
@@ -141,13 +141,13 @@ class Items:
     def __init__(self):
         self.items : list[StatusWordItem] = []
 
-    def add_item(self, item):
+    def add_status_word_item(self, item):
         self.items.append(item)
 
-    def remove_item(self, item):
+    def remove_status_word_item(self, item):
         self.items.remove(item)
 
-    def clear_items(self):
+    def clear_status_word_items(self):
         self.items.clear()
 
     def __len__(self):
