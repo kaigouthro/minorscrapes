@@ -17,7 +17,6 @@ from selenium.webdriver.common.by import By
 
 from statwords import StatusWordItem, Items
 
-
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
 
@@ -27,13 +26,10 @@ NOTIFICATION = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
 
-
-
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
     Get all tags that match the given parameters, but ignore tags if the parent exists
     if an attribute exists, only get tags witth that attribute, otherwise get all of tho9se tags
-
 
     Args:
         soup (beautifulsoup object): BeautifulSoup Object
