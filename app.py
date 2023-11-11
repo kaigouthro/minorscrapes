@@ -317,8 +317,8 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
             return content
 
         try:
-            content = fetch_content(url, data)
-            update_status(data)
+            content = fetch_content(url, data, i, queue, local_path)
+            update_status(data, i, queue)
 
         except Exception as e:
             data["saving"] = f"{url} - {e}"
