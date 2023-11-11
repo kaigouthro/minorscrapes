@@ -21,7 +21,6 @@ from bs4 import BeautifulSoup
 
 from statwords import StatusWordItem, Items
 
-
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
 
