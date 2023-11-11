@@ -63,30 +63,30 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 class RenderedPage:
-    def __init__(self):
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Run the browser in headless mode
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
+        def __init__(self):
+            chrome_options = Options()
+            chrome_options.add_argument("--headless")  # Run the browser in headless mode
+            self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
 
 
-    def get_rendered_page(self, url):
+            def get_rendered_page(self, url):
                 
-        # Load the webpage in the headless browser
-        self.driver.get(url)
+                # Load the webpage in the headless browser
+                self.driver.get(url)
 
-        # Wait for JavaScript to execute and render the page
-        # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(2)
+                # Wait for JavaScript to execute and render the page
+                # You can use explicit waits to wait for specific elements to appear on the page
+                time.sleep(2)
         
-        # Get the fully rendered HTML
-        full_html = self.driver.page_source
+                # Get the fully rendered HTML
+                full_html = self.driver.page_source
         
-        # # Close the browser
-        # self.driver.quit()
+                # # Close the browser
+                # self.driver.quit()
         
-        # Create a Beautiful Soup object of the fully rendered page
-        soup = BeautifulSoup(full_html, "html5lib")
-        return soup
+                # Create a Beautiful Soup object of the fully rendered page
+                soup = BeautifulSoup(full_html, "html5lib")
+                return soup
 
 
 def convert_to_markdown(soup):
