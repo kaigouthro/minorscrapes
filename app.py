@@ -50,7 +50,7 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
             attrs = tag_attr["attrs"]
             for attr in attrs:
                 # get all tags with those attributes
-                tags = [t for t in tags if t.has_attr(attr) or t.has_attr(attr + "s")]
+                tags = [t for t in tags if t.has_attr(attr) or t.has_attr(f"{attr}s")]
         for t in tags:
             if not t.find_parents(tag):
                 yield t
@@ -62,8 +62,9 @@ from webdriver_manager.firefox import GeckoDriverManager
 
 @st.cache_resource
 def get_driver():
+    temp_dir = os.path.join('/opt', 'tmp')
     # Download the Firefox Portable edition to a temporary folder
-    temp_dir = tempfile.mkdtemp()
+    os.makedirs(temp_dir, exist_ok=True)
     binary_path = os.path.join(temp_dir, 'firefox')
     binary_url = 'https://download.mozilla.org/?product=firefox-portable-latest-ssl&os=win64&lang=en-US'  # Replace with the URL of the Firefox Portable edition
     
@@ -77,7 +78,7 @@ def get_driver():
     # Set up the WebDriver
     firefox_options = Options()
     firefox_options.binary_location = binary_path
-    firefox_options.headless = True  # Enable headless mode
+    firefox_options.add_argument('--headless')
     firefox_options.add_argument('--disable-gpu')
 
     return webdriver.Firefox(options=firefox_options)
