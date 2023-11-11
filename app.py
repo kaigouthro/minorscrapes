@@ -17,7 +17,6 @@ from selenium.webdriver.common.by import By
 
 from statwords import StatusWordItem, Items
 
-
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
 
@@ -27,13 +26,10 @@ NOTIFICATION = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
 
-
-
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
     Get all tags that match the given parameters, but ignore tags if the parent exists
     if an attribute exists, only get tags witth that attribute, otherwise get all of tho9se tags
-
 
     Args:
         soup (beautifulsoup object): BeautifulSoup Object
@@ -55,39 +51,31 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
             if not t.find_parents(tag):
                 yield t
 
-
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-
 class RenderedPage:
     def __init__(self):
         chrome_options = Options()
         chrome_options.add_argument("--headless")  # Run the browser in headless mode
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=chrome_options)
-
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
     def get_rendered_page(self, url):
-                
         # Load the webpage in the headless browser
         self.driver.get(url)
 
         # Wait for JavaScript to execute and render the page
         # You can use explicit waits to wait for specific elements to appear on the page
         time.sleep(2)
-        
+
         # Get the fully rendered HTML
         full_html = self.driver.page_source
-        
-        # # Close the browser
-        # self.driver.quit()
-        
+
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
-
 
 def convert_to_markdown(soup):
     """
@@ -100,7 +88,6 @@ def convert_to_markdown(soup):
     Returns:
         str: The converted Markdown text.
     """
-
     converter = MarkdownConverter(
         code_language="python",
         default_title=False,
@@ -108,7 +95,6 @@ def convert_to_markdown(soup):
         escape_underscores=False,
     )
     return converter.convert_soup(soup)
-
 
 def convert_to_safe_url(text):
     """
@@ -124,10 +110,8 @@ def convert_to_safe_url(text):
     regex = r"[^a-zA-Z0-9-_]|\:"
     return re.sub(regex, subst, text, 0, re.DOTALL)
 
-
 def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
-
 
 def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     """
@@ -181,7 +165,6 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
                         self.hyperlinks.append(attr[1])
 
     def get_hyperlinks(url):
-
         """
         Retrieves all hyperlinks from a given URL.
 
