@@ -1,14 +1,12 @@
+
+import asyncio
 import os
 import re
 import time
-import platform
-import subprocess
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 
-import bs4
-import mdformat
 import requests
 import streamlit as st
 from bs4 import BeautifulSoup
@@ -16,7 +14,6 @@ from markdownify import MarkdownConverter
 from selenium.webdriver.common.by import By
 
 from statwords import StatusWordItem, Items
-
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
@@ -55,24 +52,17 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
                 yield t
 
 
-import asyncio
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-
 @st.cache_resource
 def get_driver():
     # Set up the headless browser
     chrome_options = Options()
     chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-    return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 
 class RenderedPage:
     def __init__(self):
-        self.loop = asyncio.get_event_loop()
-        self.driver = self.loop.run_until_complete(self.create_driver())
+        self.driver = None
 
     async def create_driver(self):
         # Set up the headless browser
@@ -82,22 +72,26 @@ class RenderedPage:
         return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
     async def get_rendered_page(self, url):
+        if self.driver is None:
+            self.driver = await self.create_driver()
+
         # Load the webpage in the headless browser
-        await self.loop.run_in_executor(None, self.driver.get, url)
+        self.driver.get(url)
 
         # Wait for JavaScript to execute and render the page
         await asyncio.sleep(5)
-        
+
         # Get the fully rendered HTML
-        await self.loop.run_in_executor(None, self.driver.page_source)
-        
+        full_html = self.driver.page_source
+
         # Close the browser
-        await self.loop.run_in_executor(None, self.driver.quit)
+        self.driver.quit()
 
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
-        
+
+
 def convert_to_markdown(soup):
     """
     Converts the input text to Markdown format.
@@ -138,7 +132,7 @@ def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
 
 
-def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
+async def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     """
     Crawls a website and saves or displays the content.
 
@@ -201,7 +195,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             list: A list of hyperlinks found in the URL.
         """
         try:
-            src = RenderedPage().get_rendered_page(url).prettify()
+            src = await RenderedPage().get_rendered_page(url).prettify()
             parser = HyperlinkParser()
             parser.feed(src)
             return parser.hyperlinks
@@ -220,7 +214,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             list: A list of domain-specific hyperlinks found in the URL.
         """
         clean_links = []
-        hl = get_hyperlinks(url)
+        hl = await get_hyperlinks(url)
         for link in hl:
             clean_link = None
             if re.search(rf"http.*?{local_domain}/.+", link):
@@ -278,11 +272,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             )
 
         def fetch_content(url, data):
-            src = (
-                RenderedPage()
-                .get_rendered_page(url)
-                .renderContents(encoding="UTF-8", prettyPrint=True)
-            )
+            src = await RenderedPage().get_rendered_page(url).renderContents(encoding="UTF-8", prettyPrint=True)
             content = src
             # content = body.get_dom_attribute("outerHTML")
             data["resp_code"] = requests.get(url).status_code
@@ -292,7 +282,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             return content
 
         try:
-            content = fetch_content(url, data)
+            content = await fetch_content(url, data)
             update_status(data)
 
         except Exception as e:
@@ -303,20 +293,18 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
         base_filename = f"{f'{convert_to_safe_url(parent_path)}/' if parent_path else '/'}{convert_to_safe_url(path_tail)}"
         soup = BeautifulSoup(content, "html5lib")
         tag_items = list(get_matching_tags(soup, tags_to_save))
-        # remove duplicates starting from the last item towards the first..
 
         md_output = None
         md_display = ""
         md_add = ""
         expnd = st.expander(f":green[{base_filename}]") if not do_save else st.empty()
         for tag in tag_items:
-            # tag = tag.text
             if re.search(
                 r"\<\s*\w+\s+class\s*\=\s*(?=\"[^\"]*?(footer|menu|breadcrumbs|header)[^\"]*\")",
                 tag.text,
             ):
                 continue
-            md_display = mdformat.text(convert_to_markdown(tag))
+            md_display = convert_to_markdown(tag)
             if do_save:
                 md_add += "\n" + md_display + "\n"
             else:
@@ -330,7 +318,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
                 file.write(md_output)
         i += 1
 
-        for link in get_domain_hyperlinks(local_domain, url):
+        for link in await get_domain_hyperlinks(local_domain, url):
             if (
                 re.search(r"(?<=#)[A-Za-z0-9]+", link)
                 or (link in seen)
@@ -347,9 +335,9 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     progress.empty()
 
 
-def main():
+async def main():
     """
-    The main function that runs the web scraping application.
+    The asynchronous main function that runs the web scraping application.
     """
 
     url = COLUMNS[0].text_input(
@@ -502,12 +490,11 @@ def main():
             data = {"tag": tag, "attrs": property_dict}
             tag_requests.append(data)  # Append the dictionary to the list
 
-    if COLUMNS[2].button("Crawl It", use_container_width=True, type="primary"):
-        crawl_website(url, tag_requests, do_save, up_level)
-        NOTIFICATION.info("Crawling complete!")
-        time.sleep(5)
-        NOTIFICATION.empty()
+    await crawl_website(url, tag_requests, do_save, up_level)
+    NOTIFICATION.info("Crawling complete!")
+    time.sleep(5)
+    NOTIFICATION.empty()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
