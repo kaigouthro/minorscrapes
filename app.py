@@ -46,12 +46,13 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
         # get all tags that match the tag
         tags = soup.find_all(tag)
         if tag_attr["attrs"] is not None:
-        attrs = tag_attr["attrs"]
-        for attr in attrs:
-        # get all tags with those attributes
-        tags = [t for t in tags if t.has_attr(attr) or t.has_attr(attr + "s")]
-        for t in tags:
-        if not t.find_parents(tag):
+            attrs = tag_attr["attrs"]
+            for attr in attrs:
+                # get all tags with those attributes
+                tags = [t for t in tags if t.has_attr(attr) or t.has_attr(attr + "s")]
+            for t in tags:
+                if not t.find_parents(tag):
+                    yield t
 yield t
 
 import asyncio
