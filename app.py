@@ -124,6 +124,29 @@ class RenderedPage:
             )
 
         def fetch_web_page_content(url, data):
+            # Wait for JavaScript to execute and render the page
+            # You can use explicit waits to wait for specific elements to appear on the page
+            time.sleep(5)
+        
+            # Get the fully rendered HTML
+            full_html = self.driver.page_source
+            import os
+            import re as regular_expression
+            import time
+            import platform
+            import subprocess
+            from collections import deque
+            from html.parser import HTMLParser
+            from urllib.parse import urljoin, urlparse
+        
+        import bs4
+        import mdformat
+        import requests
+        import streamlit as st
+        from bs4 import BeautifulSoup
+        from markdownify import MarkdownConverter
+            # You can use explicit waits to wait for specific elements to appear on the page
+            time.sleep(5)
 
         # Wait for JavaScript to execute and render the page
         # You can use explicit waits to wait for specific elements to appear on the page
@@ -149,8 +172,27 @@ class RenderedPage:
         from selenium.webdriver.common.by import By
         
         from statwords import StatusWordItem, Items
+        import bs4
+        import mdformat
+        import requests
+        import streamlit as st
+        from bs4 import BeautifulSoup
+        from markdownify import MarkdownConverter
+        from selenium.webdriver.common.by import By
         
+        from statwords import StatusWordItem, Items
         
+        st.set_page_config("Minor Scrapes", "🔪", "wide")
+        STATE = st.session_state
+        
+        st.title("Minor Scrapes")
+        
+        NOTIFICATION = st.empty()
+        COLUMNS = st.columns([0.618, 0.01, 0.372])
+        LEFT_TABLE = COLUMNS[0].empty()
+        
+        def get_matching_tags(soup, tags_plus_atrtibutes):
+            return soup
         st.set_page_config("Minor Scrapes", "🔪", "wide")
         STATE = st.session_state
         
@@ -188,6 +230,23 @@ def convert_to_markdown(soup):
 
 
 def convert_to_safe_url(text):
+    """
+    Converts a text into a safe URL format.
+
+    Args:
+        text (str): The text to be converted.
+
+    Returns:
+        str: The converted safe URL.
+    """
+    subst = "_"
+    regex = r"[^a-zA-Z0-9-_]|\:"
+    return re.sub(regex, subst, text, 0, re.DOTALL)
+
+def add_https(url):
+    return url if url.startswith(r"http") else f"https://{url}"
+
+def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False):
     """
     Converts a text into a safe URL format.
 
