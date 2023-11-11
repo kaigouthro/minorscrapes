@@ -113,8 +113,8 @@ class RenderedPage:
         except Exception:
             return []
 
-    def extract_domain_specific_hyperlinks(local_domain, url):
-    """
+    def extract_domain_specific_hyperlinks(self, local_domain, url):
+        """
     Converts the input text to Markdown format.
 
     Args:
