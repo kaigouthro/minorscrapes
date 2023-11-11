@@ -6,21 +6,6 @@ import platform
 import subprocess
 from collections import deque
 from html.parser import HTMLParser
-from urllib.parse import urljoin, urlparse
-
-import bs4
-import mdformat
-import requests
-import streamlit as st
-from bs4 import BeautifulSoup
-from markdownify import MarkdownConverter
-from selenium.webdriver.common.by import By
-
-from statwords import StatusWordItem, Items
-
-
-st.set_page_config("Minor Scrapes", "🔪", "wide")
-STATE = st.session_state
 
 st.title("Minor Scrapes")
 
@@ -90,22 +75,53 @@ class RenderedPage:
         self.driver = get_driver()
 
     def get_rendered_web_page(self, url):
-                
-        # Load the webpage in the headless browser
-        self.driver.get(url)
+        return soup
+def convert_to_markdown(soup):
+    """
+    Converts the input text to Markdown format.
 
-        # Wait for JavaScript to execute and render the page
-        # You can use explicit waits to wait for specific elements to appear on the page
-        time.sleep(5)
+    Args:
+        input_text (soup): The input text to be converted.
+        **options (kwargs): Additional options for the Markdown conversion.
+
+    Returns:
+        str: The converted Markdown text.
+    """
+
+    converter = MarkdownConverter(
+        code_language="python",
+        default_title=False,
+        escape_asterisks=False,
+        escape_underscores=False,
+    )
+    return converter.convert_soup(soup)
+def convert_to_safe_url(text):
+
+            """
+            Crawls a website and saves or displays the content.
         
-        # Get the fully rendered HTML
-        full_html = self.driver.page_source
+            Args:
+                url (str): The URL of the website to crawl.
+                tags_to_save (list): A list of HTML tags to save.
+                do_save (bool): Whether to save the content to a folder.
+            """
+            url = add_https(url)
+            local_domain = urlparse(url).netloc
+            local_path = urlparse(url).path
+            parts = len(local_path.split("/")[1:])
+            home_url = str(os.path.split(url)[0])
+            if parts >= 2 and up_level:
+                home_url = os.path.split(home_url)[0]
+            queue = deque([url])
+            seen = []
+            converted = []
         
-        # # Close the browser
-        def update_status(data):
-            value0 = data["resp_code"]
-            value1 = data["downloaded"]
-            value2 = data["remaining"]
+            if not os.path.exists("processed"):
+                os.mkdir("processed")
+        
+            i = 0
+        
+            progress = NOTIFICATION.progress(text="Crawling", value=1.0)
             value3 = data["saving"]
 
             if value0 != 200:
@@ -123,26 +139,6 @@ class RenderedPage:
                 text=f":orange[{value3}]",
             )
 
-        def fetch_web_page_content(url, data):
-            # Wait for JavaScript to execute and render the page
-            # You can use explicit waits to wait for specific elements to appear on the page
-            time.sleep(5)
-        
-            # Get the fully rendered HTML
-            full_html = self.driver.page_source
-            import os
-            import re as regular_expression
-            import time
-            import platform
-            import subprocess
-            from collections import deque
-            from html.parser import HTMLParser
-            from urllib.parse import urljoin, urlparse
-        
-        import bs4
-        import mdformat
-        import requests
-        import streamlit as st
         from bs4 import BeautifulSoup
         from markdownify import MarkdownConverter
             # You can use explicit waits to wait for specific elements to appear on the page
@@ -166,9 +162,6 @@ class RenderedPage:
         import bs4
         import mdformat
         import requests
-        import streamlit as st
-        from bs4 import BeautifulSoup
-        from markdownify import MarkdownConverter
         from selenium.webdriver.common.by import By
         
         from statwords import StatusWordItem, Items
@@ -183,29 +176,6 @@ class RenderedPage:
         from statwords import StatusWordItem, Items
         
         st.set_page_config("Minor Scrapes", "🔪", "wide")
-        STATE = st.session_state
-        
-        st.title("Minor Scrapes")
-        
-        NOTIFICATION = st.empty()
-        COLUMNS = st.columns([0.618, 0.01, 0.372])
-        LEFT_TABLE = COLUMNS[0].empty()
-        
-        def get_matching_tags(soup, tags_plus_atrtibutes):
-            return soup
-        st.set_page_config("Minor Scrapes", "🔪", "wide")
-        STATE = st.session_state
-        
-        st.title("Minor Scrapes")
-        
-        NOTIFICATION = st.empty()
-        COLUMNS = st.columns([0.618, 0.01, 0.372])
-        LEFT_TABLE = COLUMNS[0].empty()
-        
-        
-        
-        def get_matching_tags(soup, tags_plus_atrtibutes):
-        return soup
 
 
 def convert_to_markdown(soup):
@@ -242,30 +212,8 @@ def convert_to_safe_url(text):
     subst = "_"
     regex = r"[^a-zA-Z0-9-_]|\:"
     return re.sub(regex, subst, text, 0, re.DOTALL)
-
 def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
-
-def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False):
-    """
-    Converts a text into a safe URL format.
-
-    Args:
-        text (str): The text to be converted.
-
-    Returns:
-        str: The converted safe URL.
-    """
-    subst = "_"
-    regex = r"[^a-zA-Z0-9-_]|\:"
-    return re.sub(regex, subst, text, 0, re.DOTALL)
-
-
-def add_https(url):
-    return url if url.startswith(r"http") else f"https://{url}"
-
-
-def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False):
     """
     Crawls a website and saves or displays the content.
 
@@ -316,8 +264,6 @@ def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False
                     if attr[0] == "href":
                         self.hyperlinks.append(attr[1])
 
-    def extract_hyperlinks_from_web_page(url):
-
         """
         Retrieves all hyperlinks from a given URL.
 
@@ -335,7 +281,6 @@ def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False
         except Exception:
             return []
 
-    def extract_domain_specific_hyperlinks(local_domain, url):
         """
         Retrieves domain-specific hyperlinks from a given URL.
 
@@ -348,7 +293,6 @@ def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False
         """
         clean_links = []
         hl = get_hyperlinks(url)
-        for link in hl:
             clean_link = None
             if re.search(rf"http.*?{local_domain}/.+", link):
                 url_obj = urlparse(link)
@@ -361,15 +305,11 @@ def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False
                     clean_link = clean_link[:-1]
                 clean_links.append(clean_link)
         return clean_links
-
     statsvals = Items()
-
     statsvals.add_item(StatusWordItem("resp_code"))
     statsvals.add_item(StatusWordItem("finished"))
     statsvals.add_item(StatusWordItem("pending"))
     statsvals.add_item(StatusWordItem("saving"))
-
-    while queue:
         stattable.table([s.display for s in statsvals.items])
         url = queue.pop()
         if url in converted:
@@ -382,8 +322,6 @@ def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False
         if do_save:
             os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
         content = None
-
-        def update_scraping_status(data):
             value0 = data["resp_code"]
             value1 = data["downloaded"]
             value2 = data["remaining"]
@@ -402,23 +340,6 @@ def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False
                     max(0, i - len(queue)) / (1 + i + len(queue)),
                 ),
                 text=f":orange[{value3}]",
-            )
-
-        def fetch_content(url, data):
-            src = (
-                RenderedPage()
-                .get_rendered_page(url)
-                .renderContents(encoding="UTF-8", prettyPrint=True)
-            )
-            content = src
-            # content = body.get_dom_attribute("outerHTML")
-            data["resp_code"] = requests.get(url).status_code
-            data["downloaded"] = i
-            data["remaining"] = 1 + len(queue)
-            data["saving"] = local_path
-            return content
-
-        try:
             content = fetch_content(url, data)
             update_status(data)
 
@@ -438,7 +359,6 @@ def crawl_and_scrape_website(url, tags_to_save=[], do_save=False, up_level=False
         hyperlink = queue.pop()
         scraping_progress = NOTIFICATION.progress(text="Crawling", value=1.0)
         for tag in tag_items:
-            # tag = tag.text
             if re.search(
                 r"\<\s*\w+\s+class\s*\=\s*(?=\"[^\"]*?(footer|menu|breadcrumbs|header)[^\"]*\")",
                 tag.text,
@@ -608,22 +528,6 @@ def main_scraping_process():
         st.session_state.tags[html_tag].append({attr_name: val})
     if COLUMNS[2].button("Clear", type="secondary", use_container_width=True):
         st.session_state.tags[html_tag] = []
-
-    # make dataframe data..
-    df_data = {
-        "Tag": list(st.session_state.tags.keys()),
-        "Attr": [(v or None) for v in st.session_state.tags.values()],
-    }
-
-    # Display the dataframe
-    COLUMNS[0].dataframe(df_data, use_container_width=True, height=400)
-
-    COLUMNS[2].slider("Not yet implemented...", 1, 5, 2, 1, key="colsplit")
-
-    tag_requests = [{"tag": t, "attrs": None} for t in st.session_state.tags.keys()]
-
-    # Iterate over tags and properties
-    for tag, properties in st.session_state.tags.items():
 
         for property_dict in properties:
             # Create dictionary for each tag and properties
