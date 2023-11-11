@@ -28,12 +28,10 @@ COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
 
 
-
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
     Get all tags that match the given parameters, but ignore tags if the parent exists
     if an attribute exists, only get tags witth that attribute, otherwise get all of tho9se tags
-
 
     Args:
         soup (beautifulsoup object): BeautifulSoup Object
@@ -42,7 +40,6 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
     Yields:
         BeautifulSoup.Tag: tags that match the given parameters
     """
-    for tag_attr in tags_plus_atrtibutes:
         tag = tag_attr["tag"]
         # get all tags that match the tag
         tags = soup.find_all(tag)
@@ -61,7 +58,6 @@ from selenium.webdriver.firefox.service import Service
 from webdriver_manager.firefox import GeckoDriverManager
 
 
-
 def get_driver():
     # Set up the headless browser
     firefox_options = Options()    
@@ -70,12 +66,10 @@ def get_driver():
     return webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=firefox_options)
 
 
-class RenderedPage:
     def __init__(self):
         self.driver = get_driver()
 
     def get_rendered_page(self, url):
-        
         self.driver.start()
         
         # Load the webpage in the headless browser
@@ -94,7 +88,6 @@ class RenderedPage:
         # Create a Beautiful Soup object of the fully rendered page
         soup = BeautifulSoup(full_html, "html5lib")
         return soup
-
 
 def convert_to_markdown(soup):
     """
@@ -116,7 +109,6 @@ def convert_to_markdown(soup):
     )
     return converter.convert_soup(soup)
 
-
 def convert_to_safe_url(text):
     """
     Converts a text into a safe URL format.
@@ -131,10 +123,8 @@ def convert_to_safe_url(text):
     regex = r"[^a-zA-Z0-9-_]|\:"
     return re.sub(regex, subst, text, 0, re.DOTALL)
 
-
 def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
-
 
 def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     """
@@ -188,7 +178,6 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
                         self.hyperlinks.append(attr[1])
 
     def get_hyperlinks(url):
-
         """
         Retrieves all hyperlinks from a given URL.
 
@@ -219,7 +208,6 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
         """
         clean_links = []
         hl = get_hyperlinks(url)
-        for link in hl:
             clean_link = None
             if re.search(rf"http.*?{local_domain}/.+", link):
                 url_obj = urlparse(link)
@@ -240,7 +228,6 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
     statsvals.add_item(StatusWordItem("pending"))
     statsvals.add_item(StatusWordItem("saving"))
 
-    while queue:
         stattable.table([s.display for s in statsvals.items])
         url = queue.pop()
         if url in converted:
