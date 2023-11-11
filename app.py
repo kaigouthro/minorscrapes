@@ -116,19 +116,19 @@ def convert_to_safe_url(text):
             seen = []
             converted = []
         
-            if not os.path.exists("processed"):
-                os.mkdir("processed")
-        
-            i = 0
-        
-            progress = NOTIFICATION.progress(text="Crawling", value=1.0)
-            value3 = data["saving"]
+if not os.path.exists("processed"):
+    os.mkdir("processed")
 
-            if value0 != 200:
-                statsvals.items[0].response_code(value0)
-            else:
-                statsvals.items[1].set("finished", value1)
-                statsvals.items[2].set("pending", value2)
+i = 0
+
+progress = NOTIFICATION.progress(text="Crawling", value=1.0)
+value3 = data["saving"]
+
+if value0 != 200:
+    statsvals.items[0].response_code(value0)
+else:
+    statsvals.items[1].set("finished", value1)
+    statsvals.items[2].set("pending", value2)
         statsvals.items[3].set("saving", value3)
 
         progress.progress(
