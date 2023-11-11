@@ -1,8 +1,6 @@
 import os
 import re
 import asyncio
-import platform
-import subprocess
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
@@ -131,7 +129,7 @@ def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
 
 
-def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
+def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
     """
     Crawls a website and saves or displays the content.
 
@@ -140,6 +138,9 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
         tags_to_save (list): A list of HTML tags to save.
         do_save (bool): Whether to save the content to a folder.
     """
+    if tags_to_save is None:
+        tags_to_save = []
+        
     url = add_https(url)
     local_domain = urlparse(url).netloc
     local_path = urlparse(url).path
@@ -250,7 +251,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
         content = None
 
-        def update_status(data):
+        def update_status(data, i):
             value0 = data["resp_code"]
             value1 = data["downloaded"]
             value2 = data["remaining"]
@@ -279,7 +280,7 @@ def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
             )
             content = src
             # content = body.get_dom_attribute("outerHTML")
-            data["resp_code"] = requests.get(url).status_code
+            data["resp_code"] = requests.get(url, timeout=5).status_code
             data["downloaded"] = i
             data["remaining"] = 1 + len(queue)
             data["saving"] = local_path
