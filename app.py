@@ -46,14 +46,13 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
         # get all tags that match the tag
         tags = soup.find_all(tag)
         if tag_attr["attrs"] is not None:
-            attrs = tag_attr["attrs"]
-            for attr in attrs:
-                # get all tags with those attributes
-                tags = [t for t in tags if t.has_attr(attr) or t.has_attr(attr + "s")]
+        attrs = tag_attr["attrs"]
+        for attr in attrs:
+        # get all tags with those attributes
+        tags = [t for t in tags if t.has_attr(attr) or t.has_attr(attr + "s")]
         for t in tags:
-            if not t.find_parents(tag):
-                yield t
-
+        if not t.find_parents(tag):
+yield t
 
 import asyncio
 from selenium import webdriver
@@ -68,230 +67,225 @@ def get_driver():
     chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
     return webdriver.Chrome(sevice=Service(ChromeDriverManager().install()), options=chrome_options)
 
-
 class RenderedPage:
-    def __init__(self):
-        self.loop = asyncio.get_event_loop()
-        self.driver = self.loop.run_until_complete(self.create_driver())
+def __init__(self):
+    self.loop = asyncio.get_event_loop()
+    self.driver = self.loop.run_until_complete(self.create_driver())
 
-    async def create_driver(self):
-        # Set up the headless browser
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
-        chrome_options.add_argument('--disable-gpu')    
-        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+async def create_driver(self):
+    # Set up the headless browser
+    chrome_options = Options()
+    chrome_options.add_argument("--headless=new")  # Run the browser in headless mode
+    chrome_options.add_argument('--disable-gpu')    
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
     async def get_rendered_page(self, url):
-        # Load the webpage in the headless browser
-        await self.loop.run_in_executor(None, self.driver.get, url)
+# Load the webpage in the headless browser
+await self.loop.run_in_executor(None, self.driver.get, url)
 
-        # Wait for JavaScript to execute and render the page
-        await asyncio.sleep(5)
-        
-        # Get the fully rendered HTML
-        await self.loop.run_in_executor(None, self.driver.page_source)
-        
-        # Close the browser
-        await self.loop.run_in_executor(None, self.driver.quit)
+# Wait for JavaScript to execute and render the page
+await asyncio.sleep(5)
 
-        # Create a Beautiful Soup object of the fully rendered page
-        soup = BeautifulSoup(full_html, "html5lib")
-        return soup
-        
+# Get the fully rendered HTML
+await self.loop.run_in_executor(None, self.driver.page_source)
+
+# Close the browser
+await self.loop.run_in_executor(None, self.driver.quit)
+
+# Create a Beautiful Soup object of the fully rendered page
+soup = BeautifulSoup(full_html, "html5lib")
+return soup
+
 def convert_to_markdown(soup):
-    """
-    Converts the input text to Markdown format.
+"""
+Converts the input text to Markdown format.
 
-    Args:
-        input_text (soup): The input text to be converted.
-        **options (kwargs): Additional options for the Markdown conversion.
+Args:
+    input_text (soup): The input text to be converted.
+    **options (kwargs): Additional options for the Markdown conversion.
 
-    Returns:
-        str: The converted Markdown text.
-    """
+Returns:
+    str: The converted Markdown text.
+"""
 
-    converter = MarkdownConverter(
-        code_language="python",
-        default_title=False,
-        escape_asterisks=False,
-        escape_underscores=False,
-    )
-    return converter.convert_soup(soup)
-
+converter = MarkdownConverter(
+    code_language="python",
+    default_title=False,
+    escape_asterisks=False,
+    escape_underscores=False,
+)
+return converter.convert_soup(soup)
 
 def convert_to_safe_url(text):
-    """
-    Converts a text into a safe URL format.
+"""
+Converts a text into a safe URL format.
 
-    Args:
-        text (str): The text to be converted.
+Args:
+    text (str): The text to be converted.
 
-    Returns:
-        str: The converted safe URL.
-    """
-    subst = "_"
-    regex = r"[^a-zA-Z0-9-_]|\:"
-    return re.sub(regex, subst, text, 0, re.DOTALL)
-
+Returns:
+    str: The converted safe URL.
+"""
+subst = "_"
+regex = r"[^a-zA-Z0-9-_]|\:"
+return re.sub(regex, subst, text, 0, re.DOTALL)
 
 def add_https(url):
-    return url if url.startswith(r"http") else f"https://{url}"
-
+return url if url.startswith(r"http") else f"https://{url}"
 
 def crawl_website(url, tags_to_save=[], do_save=False, up_level=False):
+"""
+Crawls a website and saves or displays the content.
+
+Args:
+    url (str): The URL of the website to crawl.
+    tags_to_save (list): A list of HTML tags to save.
+    do_save (bool): Whether to save the content to a folder.
+"""
+url = add_https(url)
+local_domain = urlparse(url).netloc
+local_path = urlparse(url).path
+parts = len(local_path.split("/")[1:])
+home_url = str(os.path.split(url)[0])
+if parts >= 2 and up_level:
+    home_url = os.path.split(home_url)[0]
+queue = deque([url])
+seen = []
+converted = []
+
+if not os.path.exists("processed"):
+    os.mkdir("processed")
+
+i = 0
+
+progress = NOTIFICATION.progress(text="Crawling", value=1.0)
+data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
+stattable = LEFT_TABLE.empty()
+
+class HyperlinkParser(HTMLParser):
     """
-    Crawls a website and saves or displays the content.
-
-    Args:
-        url (str): The URL of the website to crawl.
-        tags_to_save (list): A list of HTML tags to save.
-        do_save (bool): Whether to save the content to a folder.
+    A class that parses HTML and extracts hyperlinks.
     """
-    url = add_https(url)
-    local_domain = urlparse(url).netloc
-    local_path = urlparse(url).path
-    parts = len(local_path.split("/")[1:])
-    home_url = str(os.path.split(url)[0])
-    if parts >= 2 and up_level:
-        home_url = os.path.split(home_url)[0]
-    queue = deque([url])
-    seen = []
-    converted = []
 
-    if not os.path.exists("processed"):
-        os.mkdir("processed")
+    def __init__(self):
+        super().__init__()
+        self.hyperlinks = []
 
-    i = 0
-
-    progress = NOTIFICATION.progress(text="Crawling", value=1.0)
-    data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
-    stattable = LEFT_TABLE.empty()
-
-    class HyperlinkParser(HTMLParser):
+    def handle_starttag(self, tag, attrs):
         """
-        A class that parses HTML and extracts hyperlinks.
-        """
-
-        def __init__(self):
-            super().__init__()
-            self.hyperlinks = []
-
-        def handle_starttag(self, tag, attrs):
-            """
-            Handles the start tag of an HTML element and extracts hyperlinks.
-
-            Args:
-                tag (str): The name of the HTML tag.
-                attrs (list): A list of attribute-value pairs for the HTML tag.
-            """
-            if tag == "a":
-                for attr in attrs:
-                    if attr[0] == "href":
-                        self.hyperlinks.append(attr[1])
-
-    def get_hyperlinks(url):
-
-        """
-        Retrieves all hyperlinks from a given URL.
+        Handles the start tag of an HTML element and extracts hyperlinks.
 
         Args:
-            url (str): The URL to retrieve hyperlinks from.
-
-        Returns:
-            list: A list of hyperlinks found in the URL.
+            tag (str): The name of the HTML tag.
+            attrs (list): A list of attribute-value pairs for the HTML tag.
         """
-        try:
-            src = RenderedPage().get_rendered_page(url).prettify()
-            parser = HyperlinkParser()
-            parser.feed(src)
-            return parser.hyperlinks
-        except Exception:
-            return []
+        if tag == "a":
+            for attr in attrs:
+                if attr[0] == "href":
+                    self.hyperlinks.append(attr[1])
 
-    def get_domain_hyperlinks(local_domain, url):
-        """
-        Retrieves domain-specific hyperlinks from a given URL.
+def get_hyperlinks(url):
+"""
+Retrieves all hyperlinks from a given URL.
 
-        Args:
-            local_domain (str): The local domain to filter hyperlinks.
-            url (str): The URL to retrieve hyperlinks from.
+Args:
+    url (str): The URL to retrieve hyperlinks from.
 
-        Returns:
-            list: A list of domain-specific hyperlinks found in the URL.
-        """
-        clean_links = []
-        hl = get_hyperlinks(url)
+Returns:
+    list: A list of hyperlinks found in the URL.
+"""
+try:
+    src = RenderedPage().get_rendered_page(url).prettify()
+    parser = HyperlinkParser()
+    parser.feed(src)
+    return parser.hyperlinks
+except Exception:
+    return []
+
+def get_domain_hyperlinks(local_domain, url):
+"""
+Retrieves domain-specific hyperlinks from a given URL.
+
+Args:
+    local_domain (str): The local domain to filter hyperlinks.
+    url (str): The URL to retrieve hyperlinks from.
+
+Returns:
+    list: A list of domain-specific hyperlinks found in the URL.
+"""
+clean_links = []
+hl = get_hyperlinks(url)
         for link in hl:
-            clean_link = None
-            if re.search(rf"http.*?{local_domain}/.+", link):
-                url_obj = urlparse(link)
-                if url_obj.netloc == local_domain:
-                    clean_link = link
-            else:
-                clean_link = urljoin(url, link)
-            if clean_link is not None:
-                if clean_link.endswith("/"):
-                    clean_link = clean_link[:-1]
-                clean_links.append(clean_link)
-        return clean_links
+        clean_link = None
+        if re.search(rf"http.*?{local_domain}/.+", link):
+        url_obj = urlparse(link)
+        if url_obj.netloc == local_domain:
+        clean_link = link
+        else:
+        clean_link = urljoin(url, link)
+        if clean_link is not None:
+        if clean_link.endswith("/"):
+        clean_link = clean_link[:-1]
+        clean_links.append(clean_link)
+return clean_links
 
-    statsvals = Items()
+statsvals = Items()
 
-    statsvals.add_item(StatusWordItem("resp_code"))
-    statsvals.add_item(StatusWordItem("finished"))
-    statsvals.add_item(StatusWordItem("pending"))
-    statsvals.add_item(StatusWordItem("saving"))
+statsvals.add_item(StatusWordItem("resp_code"))
+statsvals.add_item(StatusWordItem("finished"))
+statsvals.add_item(StatusWordItem("pending"))
+statsvals.add_item(StatusWordItem("saving"))
 
     while queue:
-        stattable.table([s.display for s in statsvals.items])
-        url = queue.pop()
-        if url in converted:
-            continue
-        local_path = os.path.join(local_domain, urlparse(url).path)
-        parent_path, path_tail = (
-            os.path.split(local_path) if "/" in local_path else (None, local_path)
-        )
+stattable.table([s.display for s in statsvals.items])
+url = queue.pop()
+if url in converted:
+    continue
+local_path = os.path.join(local_domain, urlparse(url).path)
+parent_path, path_tail = (
+    os.path.split(local_path) if "/" in local_path else (None, local_path)
+)
 
-        if do_save:
-            os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
-        content = None
+if do_save:
+    os.makedirs(f"markdown/{local_domain}/{parent_path}", exist_ok=True)
+content = None
 
         def update_status(data):
-            value0 = data["resp_code"]
-            value1 = data["downloaded"]
-            value2 = data["remaining"]
-            value3 = data["saving"]
+value0 = data["resp_code"]
+value1 = data["downloaded"]
+value2 = data["remaining"]
+value3 = data["saving"]
 
-            if value0 != 200:
-                statsvals.items[0].response_code(value0)
-            else:
-                statsvals.items[1].set("finished", value1)
-                statsvals.items[2].set("pending", value2)
-                statsvals.items[3].set("saving", value3)
+if value0 != 200:
+    statsvals.items[0].response_code(value0)
+else:
+    statsvals.items[1].set("finished", value1)
+    statsvals.items[2].set("pending", value2)
+    statsvals.items[3].set("saving", value3)
 
-            progress.progress(
-                max(
-                    i / (1 + i + len(queue)),
-                    max(0, i - len(queue)) / (1 + i + len(queue)),
-                ),
-                text=f":orange[{value3}]",
-            )
+progress.progress(
+    max(
+        i / (1 + i + len(queue)),
+        max(0, i - len(queue)) / (1 + i + len(queue)),
+    ),
+    text=f":orange[{value3}]",
+)
 
         def fetch_content(url, data):
-            src = (
-                RenderedPage()
-                .get_rendered_page(url)
-                .renderContents(encoding="UTF-8", prettyPrint=True)
-            )
-            content = src
-            # content = body.get_dom_attribute("outerHTML")
-            data["resp_code"] = requests.get(url).status_code
-            data["downloaded"] = i
-            data["remaining"] = 1 + len(queue)
-            data["saving"] = local_path
-            return content
+src = (
+    RenderedPage()
+    .get_rendered_page(url)
+    .renderContents(encoding="UTF-8", prettyPrint=True)
+)
+content = src
+# content = body.get_dom_attribute("outerHTML")
+data["resp_code"] = requests.get(url).status_code
+data["downloaded"] = i
+data["remaining"] = 1 + len(queue)
+data["saving"] = local_path
+return content
 
-        try:
+try:
             content = fetch_content(url, data)
             update_status(data)
 
