@@ -71,11 +71,10 @@ def get_driver():
     response = requests.get(binary_url, stream=True)
     response.raise_for_status()
 
-    if not os.path.exists(binary_path):
-        with open(binary_path, 'wb') as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                file.write(chunk)
-        os.chmod(binary_path, 0o755)  # Set user read/write/execute permissions    # Set up the WebDriver
+    with open(binary_path, 'wb') as file:
+        for chunk in response.iter_content(chunk_size=8192):
+            file.write(chunk)
+    os.chmod(binary_path, 0o755)  # Set user read/write/execute permissions    # Set up the WebDriver
     firefox_options = Options()
     firefox_options.binary_location = binary_path
     firefox_options.add_argument('--headless')
