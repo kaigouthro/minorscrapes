@@ -5,18 +5,16 @@ import time
 from collections import deque
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
-
-import mdformat
-import requests
-import streamlit as st
-from markdownify import MarkdownConverter
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-
+from bs4 import BeautifulSoup
+import mdformat
+import requests
+import streamlit as st
+from markdownify import MarkdownConverter
 from statwords import StatusWordItem, Items
-
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
@@ -26,7 +24,6 @@ st.title("Minor Scrapes")
 NOTIFICATION = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
-
 
 def get_matching_tags(soup, tags_plus_atrtibutes):
     """
@@ -53,12 +50,6 @@ def get_matching_tags(soup, tags_plus_atrtibutes):
         for t in tags:
             if not t.find_parents(tag):
                 yield t
-
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
 class RenderedPage:
     def __init__(self):
@@ -87,7 +78,7 @@ class RenderedPage:
         self.driver.quit()
         
         # Create a Beautiful Soup object of the fully rendered page
-        soup = BeautifulSoup(full_html, "html5lib")
+        soup = BeautifulSoup(full_html, "html.parser")
         return soup
 
 
@@ -154,6 +145,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
     seen = []
     converted = []
     i = 0
+    local_path = ''
 
     if not os.path.exists("processed"):
             src = (
