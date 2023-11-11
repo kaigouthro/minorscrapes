@@ -171,6 +171,12 @@ async def crawl_website(url, tags_to_save=None, do_save=False, up_level=False, i
 
     progress = NOTIFICATION.progress(text="Crawling", value=1.0)
     data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
+    def update_status(data, i):
+        value0 = data["resp_code"]
+        value1 = data["downloaded"]
+        value2 = data["remaining"]
+        value3 = data["saving"]
+    data = {"resp_code": None, "downloaded": None, "remaining": None, "saving": ""}
     stattable = LEFT_TABLE.empty()
 
     class HyperlinkParser(HTMLParser):
