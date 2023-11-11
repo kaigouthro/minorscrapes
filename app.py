@@ -65,6 +65,9 @@ def get_driver(options):
     return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 class RenderedPage:
+    """
+    This class is responsible for rendering a webpage in a headless browser and returning a BeautifulSoup object of the fully rendered page. It uses Selenium WebDriver to load the webpage in a headless Chrome browser, waits for JavaScript to execute and render the page, retrieves the fully rendered HTML, and then creates a BeautifulSoup object of the fully rendered page.
+    """
     def __init__(self):
         # Set up the headless browser
         chrome_options = Options()
