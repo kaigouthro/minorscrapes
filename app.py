@@ -517,6 +517,5 @@ def main():
         time.sleep(5)
         NOTIFICATION.empty()
 
-
 if __name__ == "__main__":
     main()
