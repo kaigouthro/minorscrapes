@@ -490,54 +490,7 @@ def main():
         st.session_state["filter_dict"]["include"] = list(STATE.include_tags.values())
         st.session_state["filter_dict"]["exclude"] = list(STATE.exclude_tags.values())
 
-    inclusivity = COLUMNS[2].container()
-    attribute_inclusivity = COLUMNS[2].container()
-
-    upper_tag = inclusivity.columns([1, 0.01, 1])
-    lowerr_tag = attribute_inclusivity.columns([1, 0.01, 1])
-
-    upper_tag[0].write("### :green[🗟⇪] :blue[Include]")
-    upper_tag[0].multiselect(
-        "",
-        STATE.HTML_TAGS_LIST,
-        ["h1", "h2", "h3", "pre", "p", "pre", "code", "div", "article"],
-        key="incl_tag_set",
-        label_visibility="collapsed",
-        on_change=update_includes,
-    )
-    upper_tag[2].write("### :red[🗑⇣] :orange[Blocked]")
-    upper_tag[2].multiselect(
-        "",
-        STATE.HTML_TAGS_LIST,
-        ["code", "div", "article"],
-        key="excl_tag_set",
-        label_visibility="collapsed",
-        on_change=update_includes,
-    )
-
-    upper_tag[0].radio(
-        ":green[HTML] Tag to Edit ",
-        STATE.include_tags.keys(),
-        horizontal=True,
-        key="inc_select_tag",
-    )
-    lowerr_tag[0].radio(
-        ":blue[Attribute] Tag to Edit",
-        STATE.annotations.keys(),
-        horizontal=True,
-        key="inc_select_attr",
-    )
-    lowerr_tag[0].write(STATE.annotations.get(STATE.get("inc_select_attr", ""), ""))
-
-    upper_tag[2].radio(
-        ":red[HTML] Tag to Edit", STATE.exclude_tags.keys(), horizontal=True, key="exc_select_tag"
-    )
-    lowerr_tag[2].radio(
-        ":orange[Attr] Tag to Edit",
-        STATE.annotations.keys(),
-        horizontal=True,
-        key="exc_select_attr",
-    )
+    lowerr_tag, inclusivity = add_https_to_url(update_includes)
     lowerr_tag[2].write(STATE.annotations.get(STATE.get("exc_select_attr", ""), ""))
 
     main_lower = COLUMNS[0].container()
@@ -620,6 +573,57 @@ def main():
         NOTIFICATION.info("Crawling complete!")
         time.sleep(2)
         NOTIFICATION.empty()
+
+def add_https_to_url(update_includes):
+    inclusivity = COLUMNS[2].container()
+    attribute_inclusivity = COLUMNS[2].container()
+
+    upper_tag = inclusivity.columns([1, 0.01, 1])
+    lowerr_tag = attribute_inclusivity.columns([1, 0.01, 1])
+
+    upper_tag[0].write("### :green[🗟⇪] :blue[Include]")
+    upper_tag[0].multiselect(
+        "",
+        STATE.HTML_TAGS_LIST,
+        ["h1", "h2", "h3", "pre", "p", "pre", "code", "div", "article"],
+        key="incl_tag_set",
+        label_visibility="collapsed",
+        on_change=update_includes,
+    )
+    upper_tag[2].write("### :red[🗑⇣] :orange[Blocked]")
+    upper_tag[2].multiselect(
+        "",
+        STATE.HTML_TAGS_LIST,
+        ["code", "div", "article"],
+        key="excl_tag_set",
+        label_visibility="collapsed",
+        on_change=update_includes,
+    )
+
+    upper_tag[0].radio(
+        ":green[HTML] Tag to Edit ",
+        STATE.include_tags.keys(),
+        horizontal=True,
+        key="inc_select_tag",
+    )
+    lowerr_tag[0].radio(
+        ":blue[Attribute] Tag to Edit",
+        STATE.annotations.keys(),
+        horizontal=True,
+        key="inc_select_attr",
+    )
+    lowerr_tag[0].write(STATE.annotations.get(STATE.get("inc_select_attr", ""), ""))
+
+    upper_tag[2].radio(
+        ":red[HTML] Tag to Edit", STATE.exclude_tags.keys(), horizontal=True, key="exc_select_tag"
+    )
+    lowerr_tag[2].radio(
+        ":orange[Attr] Tag to Edit",
+        STATE.annotations.keys(),
+        horizontal=True,
+        key="exc_select_attr",
+    )
+    return lowerr_tag, inclusivity
 
 if __name__ == "__main__":
     main()
