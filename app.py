@@ -20,6 +20,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
 st.title("Minor Scrapes")
+NOTIFICATION = st.empty()
 NOTIFICATION2 = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
@@ -125,7 +126,7 @@ def convert_to_safe_url(text):
     """
     subst = "_"
     regex = r"[^a-zA-Z0-9-_]|\:"
-    return re.sub(regex, subst, text, 0, re.DOTALL)
+    return re.sub(pattern=regex, repl=subst, string=text, count=0, flags=re.DOTALL)
 
 def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
@@ -168,7 +169,9 @@ def apply_filter(tags: AdvancedHTMLParser, filter_data):
     return [tag for tag in included_tags if tag not in excluded_tags]
 
 
-def crawl_website(url, tags_to_save={}, do_save=False, up_level=False):
+def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
+    if tags_to_save is None:
+        tags_to_save = {}
     """
     Crawls a website and saves or displays the content.
 
