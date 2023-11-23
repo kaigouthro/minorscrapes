@@ -20,7 +20,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
 st.title("Minor Scrapes")
-NOTIFICATION = st.empty()
 NOTIFICATION2 = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
