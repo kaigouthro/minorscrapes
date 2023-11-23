@@ -256,7 +256,7 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
 
         def fetch_content(url, data):
             content = load_page(url)
-            data["resp_code"] = requests.get(url).status_code
+            data["resp_code"] = requests.get(url, timeout=5).status_code
             data["downloaded"] = i
             data["remaining"] = 1 + len(queue)
             data["saving"] = local_path
@@ -284,8 +284,6 @@ def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
         def russian_dolly(html_content, kept_tags):
             """
             Extracts specific tags and their siblings from the HTML content based on the provided criteria.
-
-            Args:
                 html_content (str): The HTML content of the page.
                 kept_tags (list[AdvancedTag]): A list of tags that should be captured and their siblings.
 
@@ -561,7 +559,7 @@ def main():
         col = ":green" if side == "include" else ":red"
 
         astrt = " " + attr + '"=' + val if attr else " "
-        button_string = f"{col}[{side}] <{tag} {astrt}>"
+        button_string = "{}[{}] <{} {}>".format(col, side, tag, astrt)
 
         # Add new attribute button
         if loc.button(button_string, key=f"{side}_add_attribute_button"):
