@@ -7,15 +7,17 @@ from urllib.parse import urljoin, urlparse
 import mdformat
 import requests
 import streamlit as st
-from AdvancedHTMLParser import AdvancedTag, IndexedAdvancedHTMLParser as AdvancedHTMLParser
+from AdvancedHTMLParser import AdvancedTag
+from AdvancedHTMLParser import IndexedAdvancedHTMLParser as AdvancedHTMLParser
 from bs4 import BeautifulSoup
 from markdownify import MarkdownConverter
 from pygments.lexers import get_lexer_by_name, guess_lexer
 from pygments.util import ClassNotFound
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from statwords import Items, StatusWordItem
 from webdriver_manager.chrome import ChromeDriverManager
+
+from statwords import Items, StatusWordItem
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
@@ -25,7 +27,10 @@ NOTIFICATION2 = st.empty()
 COLUMNS = st.columns([0.618, 0.01, 0.372])
 LEFT_TABLE = COLUMNS[0].empty()
 BLOCK_ARIA_HIDDEN = COLUMNS[0].checkbox(
-    "Block aria-hidden", key="block_aria_hidden", value=True, help="Block tags with aria-hidden"
+    "Block aria-hidden",
+    key="block_aria_hidden",
+    value=True,
+    help="Block tags with aria-hidden",
 )
 
 
@@ -48,8 +53,11 @@ MOBILE_EMULATION = {
 
 OPTIONS.add_experimental_option("mobileEmulation", MOBILE_EMULATION)
 
-DRIVER = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=OPTIONS)
+DRIVER = webdriver.Chrome(
+    service=Service(ChromeDriverManager().install()), options=OPTIONS
+)
 DRIVER.implicitly_wait(3)
+
 
 def load_page(url):
     DRIVER.get(url)
@@ -86,7 +94,9 @@ def get_domain_hyperlinks(local_domain, url):
     return clean_links
 
 
-CONVERTER = MarkdownConverter(default_title=False, escape_asterisks=False, escape_underscores=False)
+CONVERTER = MarkdownConverter(
+    default_title=False, escape_asterisks=False, escape_underscores=False
+)
 
 
 def convert_to_markdown(tag: AdvancedTag) -> str:
@@ -105,13 +115,19 @@ def convert_to_markdown(tag: AdvancedTag) -> str:
         return CONVERTER.convert(tag.asHTML())
 
     language = next(
-        (value.replace("language-", "") for value in tag.getAttributesDict().get("class", [])), None
+        (
+            value.replace("language-", "")
+            for value in tag.getAttributesDict().get("class", [])
+        ),
+        None,
     )
     if tag.name == "div":
         return mdformat.text(CONVERTER.convert(tag.getHTML()))
 
     CONVERTER.options["code_language"] = language or detect_language(tag.text)
-    return mdformat.text(CONVERTER.convert_soup(BeautifulSoup(tag.getHTML(), "html.parser")))
+    return mdformat.text(
+        CONVERTER.convert_soup(BeautifulSoup(tag.getHTML(), "html.parser"))
+    )
 
 
 def convert_to_safe_url(text):
@@ -126,7 +142,8 @@ def convert_to_safe_url(text):
     """
     subst = "_"
     regex = r"[^a-zA-Z0-9-_]|\:"
-    return re.sub(regex, subst, text, 0, re.DOTALL)
+    return re.sub(pattern=regex, repl=subst, string=text, count=0, flags=re.DOTALL)
+
 
 def add_https(url):
     return url if url.startswith(r"http") else f"https://{url}"
@@ -141,7 +158,9 @@ def apply_filter(tags: AdvancedHTMLParser, filter_data):
             include_filter.get("name")
             attributes = include_filter.get("attributes", [])
             if len(attributes) == 0:
-                included_tags.extend(tags.getElementsByTagName(include_filter.get("name")))
+                included_tags.extend(
+                    tags.getElementsByTagName(include_filter.get("name"))
+                )
                 continue
             for attr in attributes:
                 attr_name = attr.get("name")
@@ -156,7 +175,9 @@ def apply_filter(tags: AdvancedHTMLParser, filter_data):
             exclude_filter.get("name")
             attributes = exclude_filter.get("attributes", [])
             if len(attributes) == 0:
-                excluded_tags.extend(tags.getElementsByTagName(exclude_filter.get("name")))
+                excluded_tags.extend(
+                    tags.getElementsByTagName(exclude_filter.get("name"))
+                )
                 continue
             for attr in attributes:
                 attr_name = attr.get("name")
@@ -169,7 +190,9 @@ def apply_filter(tags: AdvancedHTMLParser, filter_data):
     return [tag for tag in included_tags if tag not in excluded_tags]
 
 
-def crawl_website(url, tags_to_save={}, do_save=False, up_level=False):
+def crawl_website(url, tags_to_save=None, do_save=False, up_level=False):
+    if tags_to_save is None:
+        tags_to_save = {}
     """
     Crawls a website and saves or displays the content.
 
@@ -248,13 +271,14 @@ def crawl_website(url, tags_to_save={}, do_save=False, up_level=False):
                 ),
                 text=f":orange[{value3}]",
             )
+
         stattable.table([s.display for s in statsvals.items])
 
         item_prog.progress(0.25, text="Rendering Page")
 
         def fetch_content(url, data):
             content = load_page(url)
-            data["resp_code"] = requests.get(url).status_code
+            data["resp_code"] = requests.get(url, timeout=5).status_code
             data["downloaded"] = i
             data["remaining"] = 1 + len(queue)
             data["saving"] = local_path
@@ -282,8 +306,6 @@ def crawl_website(url, tags_to_save={}, do_save=False, up_level=False):
         def russian_dolly(html_content, kept_tags):
             """
             Extracts specific tags and their siblings from the HTML content based on the provided criteria.
-
-            Args:
                 html_content (str): The HTML content of the page.
                 kept_tags (list[AdvancedTag]): A list of tags that should be captured and their siblings.
 
@@ -332,7 +354,8 @@ def crawl_website(url, tags_to_save={}, do_save=False, up_level=False):
             if do_save
             else result_columns[current_column % split_column].expander(
                 f":green[{base_filename}]", expanded=True
-        ))
+            )
+        )
         item_prog.progress(0.85, text="Converting Page")
 
         for tag in cleaned_tags:
@@ -354,7 +377,9 @@ def crawl_website(url, tags_to_save={}, do_save=False, up_level=False):
 
             md_output = mdformat.text(md_add)
 
-            with open(f"markdown/{local_domain}/{base_filename}.md", "w", encoding="UTF-8") as file:
+            with open(
+                f"markdown/{local_domain}/{base_filename}.md", "w", encoding="UTF-8"
+            ) as file:
                 file.write(md_output)
         i += 1
         item_prog.progress(1.0, text=f"Page {i} Done {url}")
@@ -419,7 +444,9 @@ def main():
     if up_level:
         parsed_folders = os.path.split(urlparse(parsed_folders).path)[0]
 
-    COLUMNS[0].markdown(f"####  :blue[.../markdown/{urlparse(url).netloc}{parsed_folders}]")
+    COLUMNS[0].markdown(
+        f"####  :blue[.../markdown/{urlparse(url).netloc}{parsed_folders}]"
+    )
 
     COLUMNS[0].checkbox(
         f"Dowwnload to drive?",
@@ -530,7 +557,10 @@ def main():
     lowerr_tag[0].write(STATE.annotations.get(STATE.get("inc_select_attr", ""), ""))
 
     upper_tag[2].radio(
-        ":red[HTML] Tag to Edit", STATE.exclude_tags.keys(), horizontal=True, key="exc_select_tag"
+        ":red[HTML] Tag to Edit",
+        STATE.exclude_tags.keys(),
+        horizontal=True,
+        key="exc_select_tag",
     )
     lowerr_tag[2].radio(
         ":orange[Attr] Tag to Edit",
@@ -559,12 +589,14 @@ def main():
         col = ":green" if side == "include" else ":red"
 
         astrt = " " + attr + '"=' + val if attr else " "
-        button_string = f"{col}[{side}] <{tag} {astrt}>"
+        button_string = "{}[{}] <{} {}>".format(col, side, tag, astrt)
 
         # Add new attribute button
         if loc.button(button_string, key=f"{side}_add_attribute_button"):
             if tag in STATE.get(f"{side}_tags"):
-                STATE[f"{side}_tags"][tag]["attributes"].append({"name": attr, "values": [val]})
+                STATE[f"{side}_tags"][tag]["attributes"].append(
+                    {"name": attr, "values": [val]}
+                )
 
         # clear attribute button
         if loc.button(":red[Clear]", key=f"{side}_clear_attribute_button"):
@@ -597,15 +629,23 @@ def main():
     )
 
     with mainlow_coluumns[0]:
-        st.json({
-            tag["name"]: {attr["name"]: attr["values"] for attr in tag["attributes"]}
-            for tag in st.session_state["filter_dict"]["include"]
-        })
+        st.json(
+            {
+                tag["name"]: {
+                    attr["name"]: attr["values"] for attr in tag["attributes"]
+                }
+                for tag in st.session_state["filter_dict"]["include"]
+            }
+        )
     with mainlow_coluumns[2]:
-        st.json({
-            tag["name"]: {attr["name"]: attr["values"] for attr in tag["attributes"]}
-            for tag in st.session_state["filter_dict"]["exclude"]
-        })
+        st.json(
+            {
+                tag["name"]: {
+                    attr["name"]: attr["values"] for attr in tag["attributes"]
+                }
+                for tag in st.session_state["filter_dict"]["exclude"]
+            }
+        )
 
     # Display the dataframe
     inclusivity.slider("Not yet implemented...", 1, 5, 2, 1, key="colsplit")
@@ -615,11 +655,11 @@ def main():
     st.code(st.session_state["filter_dict"])
 
     if inclusivity.button("Crawl It", use_container_width=True, type="secondary"):
-
         crawl_website(url, st.session_state["filter_dict"], do_save, up_level)
         NOTIFICATION.info("Crawling complete!")
         time.sleep(2)
         NOTIFICATION.empty()
+
 
 if __name__ == "__main__":
     main()
