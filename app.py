@@ -15,9 +15,8 @@ from pygments.lexers import get_lexer_by_name, guess_lexer
 from pygments.util import ClassNotFound
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-
 from statwords import Items, StatusWordItem
+from webdriver_manager.chrome import ChromeDriverManager
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 STATE = st.session_state
