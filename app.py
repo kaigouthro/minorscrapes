@@ -14,7 +14,7 @@ from selenium.webdriver.chrome.service import Service
 from statwords import Items, StatusItem
 from webdriver_manager.chrome import ChromeDriverManager
 
-from statwords import Items, StatusWordItem
+from statwords import Items, StatusItem
 
 st.set_page_config("Minor Scrapes", "🔪", "wide")
 st.title("Minor Scrapes")
