@@ -1,5 +1,5 @@
-class StatusWordItem:
-    def __init__(self, word=None, value=None):
+class StatusItem:
+    def __init__(self, word : str = str(), value = None):
         self.content = {
             "aborted"      : {"title": "Aborted", "icon": "⛔️"},
             "cancelled"    : {"title": "Cancelled", "icon": "❌"},
@@ -44,7 +44,7 @@ class StatusWordItem:
         self.display = {"status": "", "value": ""}
         self.set(word or "", value)
 
-    def set(self, word: str, value=None):
+    def set(self, word: str, value : str|float|int|bool = None):
         """
         outtputto display: an icon and status word, as well as the state if exists
         """
@@ -59,11 +59,11 @@ class StatusWordItem:
             self.display["value"] = str(value)
         return self.display
 
-    def response_code(self, code):
+    def response_code(self, code : int) -> str:
         """
         Returns the HTTP response code as a string representation.
         """
-        response_codes = {
+        response_codes: dict[int, str] = {
             100: "Continue",
             101: "Switching Protocols",
             102: "Processing",
@@ -139,12 +139,12 @@ class StatusWordItem:
 class Items:
     """ List of Items Container """
     def __init__(self):
-        self.items : list[StatusWordItem] = []
+        self.items : list[StatusItem] = []
 
-    def add_item(self, item):
+    def add_item(self, item : StatusItem):
         self.items.append(item)
 
-    def remove_item(self, item):
+    def remove_item(self, item : StatusItem):
         self.items.remove(item)
 
     def clear_items(self):
