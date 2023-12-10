@@ -1,0 +1,68 @@
+Skip to main content
+
+# Code writing
+
+Example of how to use LCEL to write Python code.
+
+
+```python
+
+    from langchain.chat_models import ChatOpenAI
+    from langchain.prompts import (
+        ChatPromptTemplate,
+    )
+    from langchain.schema.output_parser import StrOutputParser
+    from langchain_experimental.utilities import PythonREPL
+```
+
+
+`
+
+```python
+
+    template = """Write some python code to solve the user's problem.
+
+    Return only python code in Markdown format, e.g.:
+
+    ```python
+    ....
+    ```"""
+    prompt = ChatPromptTemplate.from_messages([("system", template), ("human", "{input}")])
+
+    model = ChatOpenAI()
+
+````
+
+
+
+`
+
+```python
+
+    def _sanitize_output(text: str):
+        _, after = text.split("```python")
+        return after.split("```")[0]
+
+````
+
+
+
+```python
+
+    chain = prompt | model | StrOutputParser() | _sanitize_output | PythonREPL().run
+```
+
+
+```python
+
+    chain.invoke({"input": "whats 2 plus 2"})
+```
+
+
+```python
+
+        Python REPL can execute arbitrary code. Use with caution.
+
+        '4\n'
+
+```
