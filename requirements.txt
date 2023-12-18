@@ -1,8 +1,9 @@
+html2text
 mdformat
 requests
 streamlit
-bs4
-markdownify
-html5lib
+BeautifulSoup
+pygments
 selenium
+statwords
 webdriver_manager
