@@ -7,7 +7,9 @@ from urllib.parse import urljoin, urlparse
 import html2text
 import requests
 import streamlit as st
+
 from AdvancedHTMLParser import AdvancedHTMLParser, AdvancedTag
+
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -22,21 +24,16 @@ st.title("Minor Scrapes")
 STATE = st.session_state
 
 
-SCRAPE_TOP = st.columns([0.618, 0.01, 0.372])
+SCRAPE_TOP      = st.columns([0.618, 0.01, 0.372])
 SCRAPE_PROGRESS = SCRAPE_TOP[0].empty()
 PROGRESS_ITEM   = SCRAPE_TOP[0].empty()
-
-COLUMNS = st.columns([0.618, 0.01, 0.372])
-
-NOTIFICATION3 = SCRAPE_TOP[2].empty()
-NOTIFICATION4 = SCRAPE_TOP[2].empty()
-RIGHT_TABLE = COLUMNS[2].container()
-
-LEFT_TOP = COLUMNS[0].container()
-
-LEFT_TABLE = COLUMNS[0].container()
-
-LEFT_SHOW = COLUMNS[0].empty()
+COLUMNS         = st.columns([0.618, 0.01, 0.372])
+NOTIFICATION3   = SCRAPE_TOP[2].empty()
+NOTIFICATION4   = SCRAPE_TOP[2].empty()
+RIGHT_TABLE     = COLUMNS[2].container()
+LEFT_TOP        = COLUMNS[0].container()
+LEFT_TABLE      = COLUMNS[0].container()
+LEFT_SHOW       = COLUMNS[0].empty()
 
 
 OPTIONS = webdriver.ChromeOptions()
@@ -83,6 +80,7 @@ def add_https(url):
 
 STATE.HTML_TAGS_LIST = [
     "a",
+    "aside",
     "article",
     "blockquote",
     "caption",
@@ -149,63 +147,61 @@ def get_code_language(tag: AdvancedTag):
         "applescript",
         "assembly",
         "awk",
+        "bash",
         "batchfile",
         "c",
-        " c#",
-        " c++",
-        " cobol",
-        " css",
-        " cuda",
-        " d",
-        " dart",
-        " delphi",
-        " elixir",
-        " elm",
-        " erlang",
-        " fortran",
-        " gherkin",
-        " glsl",
-        " go",
-        " gradle",
-        " groovy",
-        " haskell",
-        " html",
-        " java",
-        " javascript",
-        " julia",
-        " kotlin",
-        " less",
-        " lisp",
-        " lua",
-        " matlab",
-        " objective-c",
-        " pascal",
-        " perl",
-        " php",
-        " powershell",
-        " prolog",
-        " protobuf",
-        " python",
-        " r",
-        " ruby",
-        " rust",
-        " scala",
-        " scheme",
-        " shell",
-        "bash",
-        " solidity",
-        " sql",
-        " swift",
-        " tcl",
-        " typescript",
-        " xml",
-        " yaml",
+        "c#",
+        "c++",
+        "cobol",
+        "css",
+        "cuda",
+        "dart",
+        "elixir",
+        "elm",
+        "erlang",
+        "go",
+        "gradle",
+        "groovy",
+        "haskell",
+        "html",
+        "java",
+        "javascript",
+        "julia",
+        "kotlin",
+        "less",
+        "lisp",
+        "lua",
+        "matlab",
+        "objective-c",
+        "pascal",
+        "perl",
+        "php",
+        "powershell",
+        "prolog",
+        "protobuf",
+        "python",
+        "r",
+        "ruby",
+        "rust",
+        "scala",
+        "scheme",
+        "shell",
+        "solidity",
+        "sql",
+        "swift",
+        "tcl",
+        "typescript",
+        "xml",
+        "yaml",
     ]
     has_class = tag.hasAttribute("class")
     if has_class:
         for class_name in tag["class"]:
             if class_name in languages:
                 return class_name
+            for language in languages:
+                if language in class_name:  ## may be inaccurate
+                    return language
             if class_name.startswith("language-"):
                 return class_name.replace("language-", "")
     return None
@@ -400,7 +396,9 @@ def crawl_website(url, filter_criteria={}, do_save=False, up_level=False, overwr
         stattable.table([s.display for s in statsvals.items])
         item_prog.progress(0.25, text="Downloading Page")
 
+
         PARSER: AdvancedHTMLParser = AdvancedHTMLParser()
+
 
         def fetch_content(url, data):
             content = load_page(url)
@@ -453,7 +451,9 @@ def crawl_website(url, filter_criteria={}, do_save=False, up_level=False, overwr
                 for item in items:
                     language = next((x for x in langs if x in item.group(2)), "python")
                 return language
+
         def filter_tags(parser: AdvancedHTMLParser, filters):
+
             if "include" in filters:
                 item_prog.progress(0.7, "including tags")
                 for include_tag in filters["include"]:
@@ -499,8 +499,8 @@ def crawl_website(url, filter_criteria={}, do_save=False, up_level=False, overwr
                     language = get_language(item)
                 tags.add(tag)
                 old = mdconvert.handle(item)
-                new = old.replace("[code]", f"[code]\n```{language}\n\n\n")
-                new = new.replace("[/code]", "\n\n```\n[/code]\n")
+                new = old.replace("[code]", f"\n```{language}\n\n\n")
+                new = new.replace("[/code]", "\n\n```\n")
                 replacement[old] = new
 
             return parser.getHTML(), replacement
