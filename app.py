@@ -24,16 +24,16 @@ st.title("Minor Scrapes")
 STATE = st.session_state
 
 
-SCRAPE_TOP      = st.columns([0.618, 0.01, 0.372])
+SCRAPE_TOP = st.columns([0.618, 0.01, 0.372])
 SCRAPE_PROGRESS = SCRAPE_TOP[0].empty()
 PROGRESS_ITEM   = SCRAPE_TOP[0].empty()
-COLUMNS         = st.columns([0.618, 0.01, 0.372])
+COLUMNS = st.columns([0.618, 0.01, 0.372])
 NOTIFICATION3   = SCRAPE_TOP[2].empty()
 NOTIFICATION4   = SCRAPE_TOP[2].empty()
-RIGHT_TABLE     = COLUMNS[2].container()
-LEFT_TOP        = COLUMNS[0].container()
-LEFT_TABLE      = COLUMNS[0].container()
-LEFT_SHOW       = COLUMNS[0].empty()
+RIGHT_TABLE = COLUMNS[2].container()
+LEFT_TOP = COLUMNS[0].container()
+LEFT_TABLE = COLUMNS[0].container()
+LEFT_SHOW = COLUMNS[0].empty()
 
 
 OPTIONS = webdriver.ChromeOptions()
